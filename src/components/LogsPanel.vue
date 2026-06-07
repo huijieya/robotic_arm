@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import { translations } from "../translations";
 import { Database, Download, FileText } from "lucide-vue-next";
+import { Logs } from "../api/index";
 
 const props = defineProps({
   language: { type: String, default: "zh" },
@@ -11,10 +12,6 @@ const props = defineProps({
 });
 
 const t = computed(() => translations[props.language]);
-
-const getUrl = (path) => {
-  return props.getApiUrl ? props.getApiUrl(path) : path;
-};
 
 const types = ref(["ScaraControl", "VisionSorter"]);
 const queriedLogs = ref(null);
@@ -33,16 +30,9 @@ const handleQueryLogs = async () => {
   if (!props.connected) return;
   loading.value = true;
   try {
-    const res = await fetch(getUrl("/log/list"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ types: types.value })
-    });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success && json.data) {
-        queriedLogs.value = json.data;
-      }
+    const res = await Logs.list(types.value);
+    if (res.data && res.data.success && res.data.data) {
+      queriedLogs.value = res.data.data;
     }
   } catch (e) {
     // ignore
@@ -59,18 +49,9 @@ const handleDownloadLogs = async () => {
   const visionNames = (queriedLogs.value.VisionSorter || []).map((file) => file.name);
 
   try {
-    const res = await fetch(getUrl("/log/download"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ScaraControl: scaraNames,
-        VisionSorter: visionNames
-      })
-    });
-
-    if (res.ok) {
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
+    const res = await Logs.download(scaraNames, visionNames);
+    if (res.data) {
+      const url = window.URL.createObjectURL(res.data);
       const a = document.createElement("a");
       a.href = url;
       a.download = `scara_industrial_logs_2026_06_05.tar`;

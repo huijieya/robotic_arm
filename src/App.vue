@@ -8,6 +8,7 @@ import ControlDashboard from "./components/ControlDashboard.vue";
 import VisionSheduler from "./components/VisionSheduler.vue";
 import LogsPanel from "./components/LogsPanel.vue";
 import { Sun, Moon, Settings, FileText } from "lucide-vue-next";
+import { Controller, Vision, updateApiBaseUrl } from "./api/index";
 
 const language = ref("zh");
 const isDark = ref(true);
@@ -159,29 +160,20 @@ const linkTelemetryStream = () => {
 // Periodic poll of connection status & vision module running state to make sure frontend is perfectly aligned
 const syncStatus = async () => {
   try {
-    const resPose = await fetch(getApiUrl("/pose_realtime"));
-    if (resPose.ok) {
-      const json = await resPose.json();
-      if (json && json.success) {
-        connected.value = true;
-        pose.value = json.data;
-      }
+    const resPose = await Controller.getRealtimePose();
+    if (resPose.data && resPose.data.success) {
+      connected.value = true;
+      pose.value = resPose.data.data;
     }
 
-    const resVision = await fetch(getApiUrl("/vision/status"));
-    if (resVision.ok) {
-      const json = await resVision.json();
-      if (json && json.success && json.data) {
-        visionRunning.value = json.data.running === 1;
-      }
+    const resVision = await Vision.getStatus();
+    if (resVision.data && resVision.data.success && resVision.data.data) {
+      visionRunning.value = resVision.data.data.running === 1;
     }
 
-    const resRoi = await fetch(getApiUrl("/get_roi"));
-    if (resRoi.ok) {
-      const json = await resRoi.json();
-      if (json && json.valid) {
-        roi.value = json;
-      }
+    const resRoi = await Vision.getRoi();
+    if (resRoi.data && resRoi.data.valid) {
+      roi.value = resRoi.data;
     }
   } catch (err) {
     // silent
@@ -208,14 +200,11 @@ onUnmounted(() => {
 // REST API Actions
 const handleConnect = async (targetIp) => {
   try {
-    const res = await fetch(getApiUrl(`/connect?ip=${encodeURIComponent(targetIp)}`));
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        connected.value = true;
-        ip.value = targetIp;
-        return true;
-      }
+    const res = await Controller.connect(targetIp);
+    if (res.data && res.data.success) {
+      connected.value = true;
+      ip.value = targetIp;
+      return true;
     }
   } catch (e) {
     console.error(e);
@@ -225,15 +214,12 @@ const handleConnect = async (targetIp) => {
 
 const handleInitialize = async () => {
   try {
-    const res = await fetch(getApiUrl("/init"));
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        initialized.value = true;
-        controllerState.value = "允许程序操作和jog";
-        controllerStateCode.value = 2;
-        return true;
-      }
+    const res = await Controller.init();
+    if (res.data && res.data.success) {
+      initialized.value = true;
+      controllerState.value = "允许程序操作和jog";
+      controllerStateCode.value = 2;
+      return true;
     }
   } catch (e) {
     console.error(e);
@@ -243,14 +229,11 @@ const handleInitialize = async () => {
 
 const handleEnable = async () => {
   try {
-    const res = await fetch(getApiUrl("/start"));
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        robotStatus.value = "使能";
-        robotStatusCode.value = 3;
-        return true;
-      }
+    const res = await Controller.start();
+    if (res.data && res.data.success) {
+      robotStatus.value = "使能";
+      robotStatusCode.value = 3;
+      return true;
     }
   } catch (e) {
     console.error(e);
@@ -260,15 +243,12 @@ const handleEnable = async () => {
 
 const handleDisable = async () => {
   try {
-    const res = await fetch(getApiUrl("/stop"));
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        robotStatus.value = "制动";
-        robotStatusCode.value = 2;
-        visionRunning.value = false;
-        return true;
-      }
+    const res = await Controller.stop();
+    if (res.data && res.data.success) {
+      robotStatus.value = "制动";
+      robotStatusCode.value = 2;
+      visionRunning.value = false;
+      return true;
     }
   } catch (e) {
     console.error(e);
@@ -278,14 +258,11 @@ const handleDisable = async () => {
 
 const handleClearError = async () => {
   try {
-    const res = await fetch(getApiUrl("/clear_error"));
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        robotStatus.value = "使能";
-        robotStatusCode.value = 3;
-        return true;
-      }
+    const res = await Controller.clearError();
+    if (res.data && res.data.success) {
+      robotStatus.value = "使能";
+      robotStatusCode.value = 3;
+      return true;
     }
   } catch (e) {
     console.error(e);
@@ -295,11 +272,9 @@ const handleClearError = async () => {
 
 const handleTriggerSimError = async () => {
   try {
-    const res = await fetch(getApiUrl("/sim_trigger_error"));
-    if (res.ok) {
-      robotStatus.value = "错误";
-      robotStatusCode.value = 1;
-    }
+    await Controller.simTriggerError();
+    robotStatus.value = "错误";
+    robotStatusCode.value = 1;
   } catch (e) {
     console.error(e);
   }
@@ -307,13 +282,10 @@ const handleTriggerSimError = async () => {
 
 const handleSpeedRatioChange = async (val) => {
   try {
-    const res = await fetch(getApiUrl(`/speedratio?value=${val}`));
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        speedRatio.value = val;
-        return true;
-      }
+    const res = await Controller.setSpeedRatio(val);
+    if (res.data && res.data.success) {
+      speedRatio.value = val;
+      return true;
     }
   } catch (e) {
     console.error(e);
@@ -323,21 +295,18 @@ const handleSpeedRatioChange = async (val) => {
 
 const handleJog = async (axis, dir, dist) => {
   try {
-    const res = await fetch(getApiUrl(`/jog_step?axis=${axis}&dir=${dir}&dist=${dist}`));
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        const offset = dir * dist;
-        const cur = { ...pose.value };
-        if (axis === "X") cur.x = parseFloat((cur.x + offset).toFixed(2));
-        if (axis === "Y") cur.y = parseFloat((cur.y + offset).toFixed(2));
-        if (axis === "Z") cur.z = parseFloat((cur.z + offset).toFixed(2));
-        if (axis === "U") cur.u = parseFloat((cur.u + offset).toFixed(2));
-        pose.value = cur;
-        return true;
-      } else {
-        alert(`Jog failed: ${json.data || 'Servo check required'}`);
-      }
+    const res = await Controller.jogStep(axis, dir, dist);
+    if (res.data && res.data.success) {
+      const offset = dir * dist;
+      const cur = { ...pose.value };
+      if (axis === "X") cur.x = parseFloat((cur.x + offset).toFixed(2));
+      if (axis === "Y") cur.y = parseFloat((cur.y + offset).toFixed(2));
+      if (axis === "Z") cur.z = parseFloat((cur.z + offset).toFixed(2));
+      if (axis === "U") cur.u = parseFloat((cur.u + offset).toFixed(2));
+      pose.value = cur;
+      return true;
+    } else {
+      alert(`Jog failed: ${res.data?.data || 'Servo check required'}`);
     }
   } catch (e) {
     console.error(e);
@@ -347,11 +316,8 @@ const handleJog = async (axis, dir, dist) => {
 
 const handleTriggerCalibration = async () => {
   try {
-    const res = await fetch(getApiUrl("/autocalib"));
-    if (res.ok) {
-      const json = await res.json();
-      return json.success;
-    }
+    const res = await Controller.triggerAutoCalib();
+    return res.data && res.data.success;
   } catch (e) {
     console.error(e);
   }
@@ -360,15 +326,12 @@ const handleTriggerCalibration = async () => {
 
 const handleStartSorting = async () => {
   try {
-    const res = await fetch(getApiUrl("/vision/start"), { method: "POST" });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        visionRunning.value = true;
-        robotStatus.value = "运行";
-        robotStatusCode.value = 4;
-        return true;
-      }
+    const res = await Vision.start();
+    if (res.data && res.data.success) {
+      visionRunning.value = true;
+      robotStatus.value = "运行";
+      robotStatusCode.value = 4;
+      return true;
     }
   } catch (e) {
     console.error(e);
@@ -378,15 +341,12 @@ const handleStartSorting = async () => {
 
 const handleStopSorting = async () => {
   try {
-    const res = await fetch(getApiUrl("/vision/stop"), { method: "POST" });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        visionRunning.value = false;
-        robotStatus.value = "使能";
-        robotStatusCode.value = 3;
-        return true;
-      }
+    const res = await Vision.stop();
+    if (res.data && res.data.success) {
+      visionRunning.value = false;
+      robotStatus.value = "使能";
+      robotStatusCode.value = 3;
+      return true;
     }
   } catch (e) {
     console.error(e);
@@ -396,19 +356,15 @@ const handleStopSorting = async () => {
 
 const handleTeachRoiSave = async (dimensions) => {
   try {
-    const res = await fetch(getApiUrl("/set_roi"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(dimensions)
-    });
-    if (res.ok) {
-      const text = await res.text();
-      if (text.includes("ROI SAVED")) {
-        roi.value = { valid: true, ...dimensions };
-        teachRoiActive.value = false;
-      } else {
-        alert(`ROI save outcome: ${text}`);
-      }
+    const res = await Vision.setRoi(dimensions);
+    if (res.data && typeof res.data === "string" && res.data.includes("ROI SAVED")) {
+      roi.value = { valid: true, ...dimensions };
+      teachRoiActive.value = false;
+    } else if (res.data && res.data.success) {
+      roi.value = { valid: true, ...dimensions };
+      teachRoiActive.value = false;
+    } else {
+      alert(`ROI save outcome: ${res.data}`);
     }
   } catch (err) {
     console.error(err);
@@ -417,12 +373,11 @@ const handleTeachRoiSave = async (dimensions) => {
 
 const handleTeachRoiClick = async () => {
   try {
-    const res = await fetch(getApiUrl("/teach_roi/start"), { method: "POST" });
-    if (res.ok) {
-      const text = await res.text();
-      if (text.includes("ROI TEACH MODE ON")) {
-        teachRoiActive.value = true;
-      }
+    const res = await Vision.startRoiTeach();
+    if (res.data && typeof res.data === "string" && res.data.includes("ROI TEACH MODE ON")) {
+      teachRoiActive.value = true;
+    } else if (res.data && res.data.success) {
+      teachRoiActive.value = true;
     }
   } catch (err) {
     console.error(err);
@@ -432,6 +387,7 @@ const handleTeachRoiClick = async () => {
 const updateBackendAddress = (val) => {
   backendAddress.value = val;
   localStorage.setItem("NEXUS_BACKEND_ADDRESS", val);
+  updateApiBaseUrl(val);
 };
 
 // Styles mapping matching Logo branding 0x2ec6d6

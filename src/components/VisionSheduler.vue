@@ -2,6 +2,7 @@
 import { ref, watch, computed } from "vue";
 import { translations } from "../translations";
 import { Eye, Hammer, Play, Square, MapPin } from "lucide-vue-next";
+import { Teach } from "../api/index";
 
 const props = defineProps({
   language: { type: String, default: "zh" },
@@ -16,10 +17,6 @@ const emit = defineEmits(["start-vision", "stop-vision"]);
 
 const t = computed(() => translations[props.language]);
 
-const getUrl = (path) => {
-  return props.getApiUrl ? props.getApiUrl(path) : path;
-};
-
 const points = ref({
   pick: true,
   place: [true, false, true]
@@ -31,12 +28,11 @@ const notif = ref(null);
 const fetchPoints = async () => {
   if (!props.connected) return;
   try {
-    const res = await fetch(getUrl("/get_points"));
-    if (res.ok) {
-      const json = await res.json();
+    const res = await Teach.getPoints();
+    if (res.data) {
       points.value = {
-        pick: !!json.pick,
-        place: Array.isArray(json.place) ? json.place : [false, false, false]
+        pick: !!res.data.pick,
+        place: Array.isArray(res.data.place) ? res.data.place : [false, false, false]
       };
     }
   } catch (e) {
@@ -53,22 +49,16 @@ watch(() => props.connected, (isConnected) => {
 const handleTeachPick = async () => {
   if (!props.connected) return;
   try {
-    const res = await fetch(getUrl("/teach_point"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "pick" })
-    });
-    if (res.ok) {
-      const text = await res.text();
-      if (text.trim() === "OK") {
-        notif.value = "PICK_TEACH_OK";
-        setTimeout(() => {
-          notif.value = null;
-        }, 2500);
-        fetchPoints();
-      } else {
-        alert(`Teach Pick Failed: ${text}`);
-      }
+    const res = await Teach.teachPoint("pick");
+    const dataStr = typeof res.data === "string" ? res.data : (res.data?.data || "");
+    if (dataStr.trim() === "OK" || (res.data && res.data.success)) {
+      notif.value = "PICK_TEACH_OK";
+      setTimeout(() => {
+        notif.value = null;
+      }, 2500);
+      fetchPoints();
+    } else {
+      alert(`Teach Pick Failed: ${dataStr}`);
     }
   } catch (e) {
     alert(`Network error: ${e}`);
@@ -78,22 +68,16 @@ const handleTeachPick = async () => {
 const handleTeachPlace = async (index) => {
   if (!props.connected) return;
   try {
-    const res = await fetch(getUrl("/teach_point"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "place", index })
-    });
-    if (res.ok) {
-      const text = await res.text();
-      if (text.trim() === "OK") {
-        notif.value = `PLACE_TEACH_${index}_OK`;
-        setTimeout(() => {
-          notif.value = null;
-        }, 2500);
-        fetchPoints();
-      } else {
-        alert(`Teach Place ${index} Failed: ${text}`);
-      }
+    const res = await Teach.teachPoint("place", index);
+    const dataStr = typeof res.data === "string" ? res.data : (res.data?.data || "");
+    if (dataStr.trim() === "OK" || (res.data && res.data.success)) {
+      notif.value = `PLACE_TEACH_${index}_OK`;
+      setTimeout(() => {
+        notif.value = null;
+      }, 2500);
+      fetchPoints();
+    } else {
+      alert(`Teach Place ${index} Failed: ${dataStr}`);
     }
   } catch (e) {
     alert(`Network error: ${e}`);

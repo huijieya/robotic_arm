@@ -15,7 +15,9 @@ const initialHost = (typeof window !== "undefined" && typeof localStorage !== "u
   : "";
 
 export const Request = Axios.create({
-  baseURL: getBaseUrl(initialHost),
+  // 开发环境下，baseURL 留空，依赖 Vite Proxy
+  // 生产环境下，这里会被 updateApiBaseUrl 动态替换为真实 IP
+  baseURL: "", 
   timeout: 30000,
   headers: {
     "Content-Type": "application/json;charset=UTF-8"
@@ -26,7 +28,9 @@ export const Request = Axios.create({
  * Dynamic configuration updater for backend network IP changes
  */
 export const updateApiBaseUrl = (backendAddr) => {
-  Request.defaults.baseURL = getBaseUrl(backendAddr);
+  // 生产环境或手动指定 IP 时，直接拼接完整 URL
+  const baseUrl = getBaseUrl(backendAddr);
+  Request.defaults.baseURL = baseUrl;
 };
 
 /**

@@ -48,7 +48,7 @@ const getWsUrl = () => {
       wsHost = `${ipPart}:${portPart + 1}`;
     }
   } else {
-    wsHost = `${host}:3001`;
+    wsHost = `${host}:8081`;
   }
   const wsProto = isBrowser && window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${wsProto}//${wsHost}`;
@@ -112,16 +112,17 @@ const linkTelemetryStream = () => {
   }
 
   const wsUrl = getWsUrl();
-  console.log("Robotic Arm linking telemetry stream:", wsUrl);
+  console.log("Connecting to WebSocket:", wsUrl);
   
   socket = new WebSocket(wsUrl);
   socket.binaryType = "blob";
 
   socket.onopen = () => {
-    console.log("Industrial telemetry stream open and verified.");
+    console.log("ws 连接成功，等待数据中...");
   };
 
   socket.onmessage = async (event) => {
+    console.log("收到ws消息:", event.data);
     if (event.data instanceof Blob) {
       // Binary frame representing camera stream update
       wsBinaryBlob.value = event.data;
@@ -168,7 +169,7 @@ const linkTelemetryStream = () => {
 
   socket.onclose = () => {
     console.warn("Robotic Arm stream lost. Retrying hook in 3000ms...");
-    reconnectTimeout = setTimeout(linkTelemetryStream, 3000);
+    reconnectTimeout = setTimeout(linkTelemetryStream, 300000);
   };
 
   socket.onerror = (err) => {

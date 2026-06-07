@@ -12,11 +12,82 @@ export default defineConfig(() => {
       },
     },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
-      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      
+      // 【重要】配置代理
+      proxy: {
+        // 策略：将所有非静态资源、非 html 的请求，且符合后端接口特征的，转发到后端
+        // 这里列出所有已知的后端接口前缀
+        '/connect': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/init': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/start': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/stop': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/clear_error': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/sim_trigger_error': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/pose_realtime': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/speedratio': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/jog_step': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/autocalib': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/vision': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/teach_roi': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/get_roi': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/set_roi': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/get_points': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/teach_point': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/log': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+      }
     },
   };
 });

@@ -71,9 +71,8 @@ const handleSaveRoi = () => {
   >
     <!-- Title -->
     <div class="flex items-center justify-between mb-3 border-b pb-2 border-cyan-500/10">
-      <div class="flex items-center gap-2">
-        <Eye class="text-[#2ec6d6]" :size="18" />
-        <span class="font-display font-bold text-sm text-white">
+      <div class="flex items-center">
+        <span class="font-display font-medium text-xs uppercase tracking-wider text-slate-400 select-none">
           {{ t.cameraFeed }}
         </span>
       </div>
@@ -102,30 +101,26 @@ const handleSaveRoi = () => {
         <span class="max-w-xs">{{ props.language === 'zh' ? '尚未建立遥测。请连接左侧IP以启动相机流。' : 'No telemetry linked. Connect IP on control board to initiate camera view stream.' }}</span>
       </div>
 
-      <!-- High Tech Telemetry HUD Overlay -->
-      <div class="absolute inset-0 pointer-events-none select-none flex flex-col justify-between p-3 font-mono text-[10px] text-cyan-400/80">
+      <!-- Professional Clean Camera HUD Overlay -->
+      <div class="absolute inset-0 pointer-events-none select-none flex flex-col justify-between p-3 font-mono text-[9px] text-[#2ec6d6]/80">
         
         <!-- Top header stats -->
         <div class="flex justify-between items-start">
-          <div class="space-y-0.5 bg-black/40 p-1 rounded backdrop-blur-xs border border-white/5">
-            <div>LATENCY: <span class="text-white font-bold">{{ latency }}ms</span></div>
-            <div>RESL: <span class="text-[#2ec6d6] font-bold">{{ resolution }}</span></div>
+          <div class="flex items-center gap-1.5 px-2 py-0.5 bg-black/60 rounded backdrop-blur-xs border border-white/5 text-[9px]">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span class="text-white font-bold uppercase tracking-wider">LIVE FEED</span>
           </div>
-          <div class="text-right space-y-0.5 bg-black/40 p-1 rounded backdrop-blur-xs border border-white/5">
-            <div>FRAME: <span class="text-white font-bold">{{ frameId }}</span></div>
-            <div class="flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
-              <span>CAM_ONLINE</span>
-            </div>
+          <div class="px-2 py-0.5 bg-black/60 text-slate-400 rounded backdrop-blur-xs border border-white/5">
+            <span>FPS: 60 | {{ latency }}ms</span>
           </div>
         </div>
 
         <!-- Crosshair grid center -->
         <div class="absolute inset-0 flex items-center justify-center">
           <div class="relative w-8 h-8 flex items-center justify-center">
-            <div class="absolute w-full h-[1px] bg-cyan-400/40" />
-            <div class="absolute h-full w-[1px] bg-cyan-400/40" />
-            <div class="w-1.5 h-1.5 rounded-full bg-cyan-500" />
+            <div class="absolute w-full h-[1px] bg-cyan-400/20" />
+            <div class="absolute h-full w-[1px] bg-cyan-400/20" />
+            <div class="w-1.5 h-1.5 rounded-full bg-[#2ec6d6]/60" />
           </div>
         </div>
 
@@ -143,19 +138,12 @@ const handleSaveRoi = () => {
           class="pointer-events-none transition-all flex items-start p-1 bg-cyan-500/5 select-none"
         >
           <span class="bg-[#2ec6d6] text-[8px] text-cyan-950 font-extrabold px-1 py-0.2 rounded-xs select-none">
-            ROI BOUNDARY
+            ROI
           </span>
         </div>
 
-        <!-- Bottom details footer -->
-        <div class="flex justify-between items-end">
-          <div class="bg-black/40 p-1 rounded backdrop-blur-xs border border-white/5">
-            <div>AXIS SPEED: <span class="text-emerald-400 font-bold">OPTIMIZED</span></div>
-          </div>
-          <div class="text-right bg-black/40 p-1 rounded backdrop-blur-xs border border-white/5 text-[9px] text-[#2ec6d6]">
-            ISO 100 | S: 1/800 | F: 2.8
-          </div>
-        </div>
+        <!-- Empty bottom overlay container -->
+        <div class="h-1"></div>
       </div>
     </div>
 

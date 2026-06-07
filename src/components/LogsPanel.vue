@@ -75,10 +75,9 @@ const formatSize = (bytes) => {
   <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
     
     <!-- Title -->
-    <div class="flex items-center justify-between mb-3 border-b pb-2 border-cyan-500/10">
-      <div class="flex items-center gap-2">
-        <Database class="text-[#2ec6d6]" :size="18" />
-        <span class="font-display font-bold text-sm text-white">
+    <div class="flex items-center justify-between mb-3 border-b pb-2 border-[#2ec6d6]/10">
+      <div class="flex items-center">
+        <span class="font-display font-medium text-xs uppercase tracking-wider text-slate-400 select-none">
           {{ t.logsTitle }}
         </span>
       </div>

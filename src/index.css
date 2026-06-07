@@ -28,13 +28,13 @@
   animation: conveyor-slide 1s linear infinite;
 }
 
-/* Custom glow effect */
+/* Clean solid styles */
 .logo-glow {
-  text-shadow: 0 0 10px rgba(46, 198, 214, 0.4);
+  text-shadow: none;
 }
 
 .box-glow {
-  box-shadow: 0 0 15px rgba(46, 198, 214, 0.25);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
 }
 
 /* Hide scrollbars but keep functionality */

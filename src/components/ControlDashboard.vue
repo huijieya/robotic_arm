@@ -113,8 +113,7 @@ onUnmounted(() => {
     
     <!-- 1. Device Connections Bento Item -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
-      <h4 class="flex items-center gap-2 font-display font-bold text-sm mb-3 text-[#2ec6d6]">
-        <Link :size="16" />
+      <h4 class="font-display font-medium text-xs uppercase tracking-wider mb-3 text-slate-400 select-none">
         <span>{{ props.language === 'zh' ? '第一步：建立通信连接' : 'Step 1: Connect Controller' }}</span>
       </h4>
 
@@ -142,8 +141,7 @@ onUnmounted(() => {
 
     <!-- 2. Arm Status & Activation Bento Item -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
-      <h4 class="flex items-center gap-2 font-display font-bold text-sm mb-4 text-[#2ec6d6]">
-        <Settings :size="16" />
+      <h4 class="font-display font-medium text-xs uppercase tracking-wider mb-4 text-slate-400 select-none">
         <span>{{ props.language === 'zh' ? '第二步与第三步：控制与使能状态' : 'Step 2 & 3: Initialization & Enable Controls' }}</span>
       </h4>
 
@@ -245,8 +243,7 @@ onUnmounted(() => {
     <!-- 3. Global Speed Overrides Slider -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
       <div class="flex items-center justify-between mb-2">
-        <h4 class="flex items-center gap-2 font-display font-bold text-sm text-[#2ec6d6]">
-          <Gauge :size="16" />
+        <h4 class="font-display font-medium text-xs uppercase tracking-wider text-slate-400 select-none">
           <span>{{ t.speedRatio }}</span>
         </h4>
         <div class="flex items-center gap-2 text-[10px] font-mono select-none">
@@ -309,9 +306,8 @@ onUnmounted(() => {
 
     <!-- 4. Auto Calibration Panel -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
-      <div class="flex items-center justify-between mb-3 pb-2 border-b border-cyan-500/10">
-        <h4 class="flex items-center gap-2 font-display font-bold text-sm text-[#2ec6d6]">
-          <Sparkles :size="16" />
+      <div class="flex items-center justify-between mb-3 pb-2 border-b border-[#2ec6d6]/10">
+        <h4 class="font-display font-medium text-xs uppercase tracking-wider text-slate-400 select-none">
           <span>{{ t.autoCalib }}</span>
         </h4>
         <button
@@ -369,8 +365,7 @@ onUnmounted(() => {
 
     <!-- 5. Jog Interactive Step controls (Manual Teleoperation) -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
-      <h4 class="flex items-center gap-2 font-display font-bold text-sm mb-3.5 text-[#2ec6d6] select-none">
-        <Navigation2 :size="16" class="rotate-45" />
+      <h4 class="font-display font-medium text-xs uppercase tracking-wider mb-3.5 text-slate-400 select-none">
         <span>{{ t.manualOption }}</span>
       </h4>
 

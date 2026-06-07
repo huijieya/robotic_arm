@@ -510,11 +510,10 @@ const innerCardBgClass = computed(() => {
         <div class="xl:col-span-5 space-y-6">
 
           <!-- 1. System Status Info Overview (系统状态总览) -->
-          <div :class="['p-5 rounded-2xl border space-y-4 shadow-xl relative transition-all duration-200 hover:border-cyan-500/30', innerCardBgClass, 'box-glow']">
+          <div :class="['p-5 rounded-2xl border space-y-4 shadow-xl relative transition-all duration-200 hover:border-cyan-500/10', innerCardBgClass, 'box-glow']">
             <div class="flex items-center justify-between border-b border-slate-800/60 pb-3">
-              <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-[#2ec6d6] animate-pulse" />
-                <h3 class="font-display font-black text-sm uppercase tracking-wider text-white">
+              <div class="flex items-center">
+                <h3 class="font-display font-medium text-xs uppercase tracking-wider text-slate-400 select-none">
                   {{ language === 'zh' ? '系统状态总览' : 'System Status Overview' }}
                 </h3>
               </div>

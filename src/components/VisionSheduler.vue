@@ -89,8 +89,7 @@ const handleTeachPlace = async (index) => {
     
     <!-- 1. Start and Stop Vision Sorting -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
-      <h4 class="flex items-center gap-2 font-display font-bold text-sm mb-3 text-[#2ec6d6]">
-        <Eye :size="16" />
+      <h4 class="font-display font-medium text-xs uppercase tracking-wider mb-3 text-slate-400 select-none">
         <span>{{ t.visionModule }}</span>
       </h4>
 
@@ -138,9 +137,8 @@ const handleTeachPlace = async (index) => {
 
     <!-- 2. Place Points Teach Control -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
-      <div class="flex items-center justify-between mb-3.5 pb-2 border-b border-cyan-500/10">
-        <h4 class="flex items-center gap-2 font-display font-bold text-sm text-[#2ec6d6]">
-          <Hammer :size="16" />
+      <div class="flex items-center justify-between mb-3.5 pb-2 border-b border-[#2ec6d6]/10">
+        <h4 class="font-display font-medium text-xs uppercase tracking-wider text-slate-400 select-none">
           <span>{{ t.pointsTitle }}</span>
         </h4>
       </div>

@@ -7,7 +7,6 @@ import { Logs } from "../api/index";
 const props = defineProps({
   language: { type: String, default: "zh" },
   connected: { type: Boolean, default: false },
-  isDark: { type: Boolean, default: true },
   getApiUrl: { type: Function, default: null }
 });
 
@@ -73,13 +72,13 @@ const formatSize = (bytes) => {
 </script>
 
 <template>
-  <div :class="['p-4 rounded-xl border transition-all', props.isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-zinc-200 shadow-sm']">
+  <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
     
     <!-- Title -->
     <div class="flex items-center justify-between mb-3 border-b pb-2 border-cyan-500/10">
       <div class="flex items-center gap-2">
         <Database class="text-[#2ec6d6]" :size="18" />
-        <span :class="['font-display font-bold text-sm', props.isDark ? 'text-white' : 'text-zinc-800']">
+        <span class="font-display font-bold text-sm text-white">
           {{ t.logsTitle }}
         </span>
       </div>
@@ -90,7 +89,7 @@ const formatSize = (bytes) => {
 
     <!-- Select Options types checkboxes -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 text-xs font-mono">
-      <label :class="['p-3 rounded-lg border flex items-center justify-between cursor-pointer transition-all', props.isDark ? 'bg-slate-950/40 border-slate-800 text-slate-300 hover:border-cyan-500/30' : 'bg-slate-50 border-zinc-200 text-zinc-700 hover:bg-slate-100']">
+      <label class="p-3 rounded-lg border border-slate-800 flex items-center justify-between cursor-pointer transition-all bg-slate-950/40 text-slate-300 hover:border-cyan-500/30">
         <div class="flex items-center gap-2">
           <input
             id="checkbox_scara_control"
@@ -104,7 +103,7 @@ const formatSize = (bytes) => {
         <span class="text-[10px] text-slate-500">/logs</span>
       </label>
 
-      <label :class="['p-3 rounded-lg border flex items-center justify-between cursor-pointer transition-all', props.isDark ? 'bg-slate-950/40 border-slate-800 text-slate-300 hover:border-cyan-500/30' : 'bg-slate-50 border-zinc-200 text-zinc-700 hover:bg-slate-100']">
+      <label class="p-3 rounded-lg border border-slate-800 flex items-center justify-between cursor-pointer transition-all bg-slate-950/40 text-slate-300 hover:border-cyan-500/30">
         <div class="flex items-center gap-2">
           <input
             id="checkbox_vision_sorter"
@@ -155,7 +154,7 @@ const formatSize = (bytes) => {
             v-for="file in queriedLogs.ScaraControl"
             :id="`scara_log_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`"
             :key="file.name"
-            :class="['p-2.5 rounded border border-slate-800 flex items-center justify-between text-[11px]', props.isDark ? 'bg-slate-950 text-slate-300' : 'bg-slate-50 text-zinc-700']"
+            class="p-2.5 rounded border border-slate-800 flex items-center justify-between text-[11px] bg-slate-955 bg-slate-950 text-slate-300"
           >
             <div class="flex items-center gap-2">
               <FileText :size="14" class="text-[#2ec6d6]" />
@@ -180,7 +179,7 @@ const formatSize = (bytes) => {
             v-for="file in queriedLogs.VisionSorter"
             :id="`vision_log_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`"
             :key="file.name"
-            :class="['p-2.5 rounded border border-slate-800 flex items-center justify-between text-[11px]', props.isDark ? 'bg-slate-950 text-slate-300' : 'bg-slate-50 text-zinc-700']"
+            class="p-2.5 rounded border border-slate-800 flex items-center justify-between text-[11px] bg-slate-950 text-slate-300"
           >
             <div class="flex items-center gap-2">
               <FileText :size="14" class="text-amber-500" />
@@ -196,7 +195,7 @@ const formatSize = (bytes) => {
       </div>
 
     </div>
-    <div v-else :class="['p-4 rounded-lg text-center font-mono text-xs border', props.isDark ? 'bg-slate-950/20 border-slate-900 text-slate-500' : 'bg-slate-50 border-zinc-100 text-zinc-400']">
+    <div v-else class="p-4 rounded-lg text-center font-mono text-xs border bg-slate-950/20 border-slate-900 text-slate-500">
       {{ props.language === 'zh' ? '尚未发起查询。点击“查询选定日志”提取系统实时生成的文件信息。' : 'Logs catalog offline. Send search query to retrieve file indexing tables.' }}
     </div>
   </div>

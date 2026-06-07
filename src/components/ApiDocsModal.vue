@@ -1,7 +1,7 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { translations } from "../translations";
-import { X, Copy, Check, Terminal } from "lucide-vue-next";
+import { X, Copy, Check, Terminal, Search, Info } from "lucide-vue-next";
 
 const props = defineProps({
   language: {
@@ -159,8 +159,38 @@ const ENDPOINTS = [
 ];
 
 const copiedId = ref(null);
+const searchQuery = ref("");
+const selectedIndex = ref(0);
+
 const t = translations[props.language];
 const backendAddress = (typeof window !== "undefined" && typeof localStorage !== "undefined") ? (localStorage.getItem("NEXUS_BACKEND_ADDRESS") || "") : "";
+
+// Filter endpoints dynamically on search query
+const filteredEndpoints = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase();
+  if (!query) return ENDPOINTS;
+  return ENDPOINTS.filter(item => {
+    const isPathMatch = item.path.toLowerCase().includes(query);
+    const isMethodMatch = item.method.toLowerCase().includes(query);
+    const zhDesc = item.desc.zh?.toLowerCase() || "";
+    const enDesc = item.desc.en?.toLowerCase() || "";
+    const jaDesc = item.desc.ja?.toLowerCase() || "";
+    const koDesc = item.desc.ko?.toLowerCase() || "";
+    const paramMatch = item.params.toLowerCase().includes(query);
+    return isPathMatch || isMethodMatch || zhDesc.includes(query) || enDesc.includes(query) || jaDesc.includes(query) || koDesc.includes(query) || paramMatch;
+  });
+});
+
+// Currently selected API based on list click
+const currentEndpoint = computed(() => {
+  const filtered = filteredEndpoints.value;
+  if (filtered.length === 0) return null;
+  // Guard index overflow
+  if (selectedIndex.value >= filtered.length) {
+    selectedIndex.value = 0;
+  }
+  return filtered[selectedIndex.value];
+});
 
 const getFullUrl = (path) => {
   if (!backendAddress) {
@@ -174,21 +204,25 @@ const getFullUrl = (path) => {
   return `http://${host}${path}`;
 };
 
-const handleCopy = (text, path) => {
+const handleCopy = (text, id) => {
   navigator.clipboard.writeText(text);
-  copiedId.value = path;
+  copiedId.value = id;
   setTimeout(() => {
     copiedId.value = null;
   }, 2000);
 };
+
+const handleSelectEndpoint = (index) => {
+  selectedIndex.value = index;
+};
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-    <div class="relative w-full max-w-4xl max-h-[85vh] bg-slate-900 border border-cyan-500/30 rounded-xl overflow-hidden flex flex-col box-glow">
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+    <div class="relative w-full max-w-5xl h-[85vh] bg-slate-900 border border-cyan-500/30 rounded-xl overflow-hidden flex flex-col box-glow">
       
       <!-- Modal Header -->
-      <div class="flex items-center justify-between p-4 border-b border-cyan-500/20 bg-slate-950">
+      <div class="flex items-center justify-between p-4 border-b border-cyan-500/20 bg-slate-950 flex-shrink-0">
         <div class="flex items-center gap-3">
           <div class="p-2 bg-cyan-950/50 border border-cyan-400/40 rounded text-[#2ec6d6]">
             <Terminal :size="20" />
@@ -205,90 +239,215 @@ const handleCopy = (text, path) => {
         <button
           id="close_docs_btn"
           @click="emit('close')"
-          class="p-1.5 rounded-lg border border-slate-700 hover:border-cyan-400/40 text-slate-400 hover:text-white transition-all cursor-pointer"
+          class="p-1.5 rounded-lg border border-slate-700 hover:border-cyan-400/40 text-slate-400 hover:text-white transition-all cursor-pointer bg-transparent"
         >
           <X :size="18" />
         </button>
       </div>
 
-      <!-- Modal Content -->
-      <div class="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar bg-slate-900 text-slate-300">
-        <div class="p-3 bg-cyan-950/20 rounded-lg border border-cyan-500/20 text-xs font-mono text-cyan-300 flex flex-col gap-1.5 leading-relaxed">
-          <span class="font-semibold text-cyan-400 text-sm">💡 Base Response Envelope Pattern:</span>
-          <span>{</span>
-          <span class="pl-4">"success": <span class="text-amber-300">true</span>,</span>
-          <span class="pl-4">"code": <span class="text-amber-300">0</span>,</span>
-          <span class="pl-4">"data": { ... }  <span class="text-slate-400">// {{ props.language === 'zh' ? '成功时为具体内容，失败可能为 null' : 'Data payload on success, null on error' }}</span></span>
-          <span>}</span>
-        </div>
-
-        <div class="space-y-4">
-          <div 
-            v-for="endpoint in ENDPOINTS"
-            :id="`endpoint_${endpoint.path.replace(/[^a-zA-Z0-9]/g, '_')}`"
-            :key="endpoint.path" 
-            class="p-4 bg-slate-950 border border-slate-800 hover:border-cyan-500/30 rounded-lg transition-all"
-          >
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
-              <div class="flex items-center gap-2 font-mono">
-                <span :class="['px-2 py-0.5 text-xs text-white uppercase rounded font-extrabold', endpoint.method === 'GET' ? 'bg-[#2ec6d6]/80 text-cyan-950' : 'bg-purple-600']">
-                  {{ endpoint.method }}
-                </span>
-                <span class="text-[#2ec6d6] font-semibold text-sm hover:underline cursor-pointer" @click="handleCopy(endpoint.path, endpoint.path)">
-                  {{ endpoint.path }}
-                </span>
-              </div>
-              <button
-                @click="handleCopy(getFullUrl(endpoint.path), endpoint.path)"
-                class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-cyan-400 font-mono transition-colors"
-              >
-                <template v-if="copiedId === endpoint.path">
-                  <Check :size="12" class="text-emerald-400" />
-                  <span class="text-emerald-400 font-medium">{{ t.copied }}</span>
-                </template>
-                <template v-else>
-                  <Copy :size="12" />
-                  <span>Copy URL</span>
-                </template>
-              </button>
+      <!-- Main Layout Body (Two Columns) -->
+      <div class="flex-1 min-h-0 flex flex-col md:flex-row bg-slate-900 overflow-hidden">
+        
+        <!-- LEFT COLUMN: API LIST WITH SEARCH -->
+        <div class="w-full md:w-80 border-b md:border-b-0 md:border-r border-[#1e293b] flex flex-col flex-shrink-0 bg-slate-950/40">
+          
+          <!-- Search Header Block -->
+          <div class="p-3.5 border-b border-[#1e293b] space-y-2">
+            <div class="relative">
+              <input
+                id="api_search_input"
+                type="text"
+                v-model="searchQuery"
+                :placeholder="props.language === 'zh' ? '搜索接口路径/描述...' : 'Search endpoints...'"
+                class="w-full pl-8 pr-3 py-1.5 text-xs font-mono rounded-lg border border-slate-800 bg-slate-950 text-cyan-300 focus:border-[#2ec6d6] outline-none placeholder-slate-500 transition-all"
+              />
+              <Search :size="13" class="absolute left-2.5 top-2.5 text-slate-500" />
             </div>
-
-            <p class="text-slate-200 text-sm mb-3">
-              {{ endpoint.desc[props.language] }}
-            </p>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono">
-              <div class="p-2 bg-slate-900 rounded border border-slate-800">
-                <span class="text-orange-400 font-bold block mb-1">
-                  {{ t.apiParam }}:
-                </span>
-                <span class="text-slate-400 text-[11px]">
-                  {{ endpoint.params }}
-                </span>
-              </div>
-              <div class="p-2 bg-slate-900 rounded border border-slate-800">
-                <span class="text-emerald-400 font-bold block mb-1">
-                  {{ t.apiResponse }}:
-                </span>
-                <span class="text-[#2ec6d6] text-[11px]">
-                  {{ endpoint.response }}
-                </span>
-              </div>
+            <div class="flex items-center justify-between text-[10px] text-slate-500 font-mono">
+              <span>{{ filteredEndpoints.length }} ENDPOINTS</span>
+              <span v-if="searchQuery" class="text-[#2ec6d6] bg-[#2ec6d6]/10 px-1.5 py-0.2 rounded font-sans scale-90">FILTERED</span>
             </div>
           </div>
+
+          <!-- Endpoints List -->
+          <div class="flex-1 overflow-y-auto p-1.5 space-y-1 select-none no-scrollbar">
+            <div v-if="filteredEndpoints.length === 0" class="p-6 text-center text-xs text-slate-500 font-mono">
+              No APIs found.
+            </div>
+            <button
+              v-else
+              v-for="(endpoint, idx) in filteredEndpoints"
+              :id="`api_list_btn_${idx}`"
+              :key="endpoint.path"
+              @click="handleSelectEndpoint(idx)"
+              :class="[
+                'w-full p-2.5 rounded-lg border text-left font-mono transition-all flex items-start gap-2.5 outline-none cursor-pointer',
+                selectedIndex === idx 
+                  ? 'bg-[#2ec6d6]/10 border-[#2ec6d6]/40 text-[#2ec6d6]' 
+                  : 'bg-transparent border-transparent hover:bg-slate-800/40 text-slate-300'
+              ]"
+            >
+              <span 
+                :class="[
+                  'px-1.5 py-0.5 text-[9px] uppercase rounded font-black font-mono scale-90 tracking-wide mt-0.5',
+                  endpoint.method === 'GET' 
+                    ? 'bg-[#2ec6d6]/20 text-[#2ec6d6]' 
+                    : 'bg-purple-600/20 text-purple-400'
+                ]"
+              >
+                {{ endpoint.method }}
+              </span>
+              <div class="flex-1 min-w-0">
+                <div class="text-xs font-bold leading-tight truncate">
+                  {{ endpoint.path.split('?')[0] }}
+                </div>
+                <div class="text-[10px] text-slate-400 truncate mt-0.5 font-sans">
+                  {{ endpoint.desc[props.language] }}
+                </div>
+              </div>
+            </button>
+          </div>
         </div>
+
+        <!-- RIGHT COLUMN: SELECTED API DETAILS -->
+        <div class="flex-1 min-w-0 flex flex-col bg-slate-900 overflow-y-auto p-5 space-y-5">
+          <div v-if="!currentEndpoint" class="flex-1 flex flex-col items-center justify-center text-center text-slate-500 p-8 space-y-3">
+            <Info :size="32" class="text-slate-600 animate-pulse" />
+            <p class="font-mono text-xs">{{ props.language === 'zh' ? '未选中接口，请在左侧列表点击。' : 'Please select an API on the left panel.' }}</p>
+          </div>
+
+          <div v-else class="space-y-5 animate-fadeIn">
+            
+            <!-- Quick overview pill bar -->
+            <div class="bg-slate-950 p-4 border border-slate-800 rounded-lg space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5 font-mono">
+                  <span :class="['px-2 py-0.5 text-xs text-white uppercase rounded font-extrabold tracking-wider', currentEndpoint.method === 'GET' ? 'bg-[#2ec6d6] text-cyan-950' : 'bg-purple-600']">
+                    {{ currentEndpoint.method }}
+                  </span>
+                  <span class="text-[#2ec6d6] font-bold text-sm md:text-base break-all">
+                    {{ currentEndpoint.path }}
+                  </span>
+                </div>
+                
+                <button
+                  @click="handleCopy(getFullUrl(currentEndpoint.path), currentEndpoint.path)"
+                  class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-cyan-400 font-mono transition-colors bg-slate-900 border border-slate-800 px-2.5 py-1 rounded"
+                >
+                  <template v-if="copiedId === currentEndpoint.path">
+                    <Check :size="12" class="text-emerald-400" />
+                    <span class="text-emerald-400 font-medium">{{ t.copied }}</span>
+                  </template>
+                  <template v-else>
+                    <Copy :size="12" />
+                    <span>Copy URL</span>
+                  </template>
+                </button>
+              </div>
+
+              <div class="text-xs font-mono text-slate-400 flex items-center gap-2 select-all break-all bg-slate-900/60 p-2 rounded border border-white/5">
+                <span class="text-[#2ec6d6] select-none text-[10px]">FULL URL:</span>
+                <span>{{ getFullUrl(currentEndpoint.path) }}</span>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="space-y-1.5">
+              <h4 class="text-xs uppercase font-extrabold text-slate-400 tracking-wider font-mono">
+                {{ t.apiDesc }}
+              </h4>
+              <p class="text-slate-200 text-sm leading-relaxed p-3.5 rounded-lg border border-slate-800/80 bg-slate-950/40">
+                {{ currentEndpoint.desc[props.language] }}
+              </p>
+            </div>
+
+            <!-- Details Parameters & Payload -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+              
+              <!-- Parameters -->
+              <div class="p-3 bg-slate-950 rounded-lg border border-slate-800 flex flex-col justify-between">
+                <div>
+                  <span class="text-orange-400 font-bold block mb-2 tracking-wide uppercase text-[10px]">
+                    {{ t.apiParam }}:
+                  </span>
+                  <p class="text-slate-300 text-[11px] whitespace-pre-wrap leading-relaxed">
+                    {{ currentEndpoint.params }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Response -->
+              <div class="p-3 bg-slate-950 rounded-lg border border-slate-800 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-emerald-400 font-bold tracking-wide uppercase text-[10px]">
+                      {{ t.apiResponse }}:
+                    </span>
+                    <button
+                      @click="handleCopy(currentEndpoint.response, currentEndpoint.path + '_resp')"
+                      class="text-slate-600 hover:text-[#2ec6d6] transition-colors"
+                      title="Copy response body"
+                    >
+                      <template v-if="copiedId === currentEndpoint.path + '_resp'">
+                        <Check :size="11" class="text-emerald-400" />
+                      </template>
+                      <template v-else>
+                        <Copy :size="11" />
+                      </template>
+                    </button>
+                  </div>
+                  <pre class="text-[#2ec6d6] text-[11px] font-mono leading-relaxed bg-slate-900/40 p-2 rounded border border-white/5 overflow-x-auto">{{ currentEndpoint.response }}</pre>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Global Envelope Standard helper -->
+            <div class="p-3.5 bg-cyan-950/10 rounded-lg border border-cyan-500/10 text-[11px] font-mono text-cyan-300 flex flex-col gap-1.5 leading-relaxed">
+              <span class="font-bold text-cyan-400 text-xs">💡 Base Response Envelope Pattern:</span>
+              <span>{</span>
+              <span class="pl-4">"success": <span class="text-amber-300">true</span>,</span>
+              <span class="pl-4">"code": <span class="text-amber-300">0</span>,</span>
+              <span class="pl-4">"data": { ... } <span class="text-slate-500">// {{ props.language === 'zh' ? '成功时为具体内容，失败可能为 null' : 'Data payload on success, null on error' }}</span></span>
+              <span>}</span>
+            </div>
+
+          </div>
+        </div>
+
       </div>
 
       <!-- Modal Footer -->
-      <div class="p-4 border-t border-cyan-500/10 bg-slate-950 text-right">
+      <div class="p-4 border-t border-cyan-500/10 bg-slate-950 text-right flex-shrink-0">
         <button
           id="close_docs_footer"
           @click="emit('close')"
-          class="px-5 py-2 font-display text-sm font-semibold rounded-lg bg-zinc-800 text-white hover:bg-zinc-700 transition-all cursor-pointer"
+          class="px-5 py-2 font-display text-xs font-semibold rounded-lg bg-zinc-800 text-white hover:bg-[#2ec6d6] hover:text-cyan-950 transition-all cursor-pointer border border-transparent shadow-md"
         >
-          Close
+          {{ props.language === 'zh' ? '关闭文档' : 'Close References' }}
         </button>
       </div>
+
     </div>
   </div>
 </template>
+
+<style scoped>
+.box-glow {
+  box-shadow: 0 0 25px rgba(46, 198, 214, 0.15);
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+</style>

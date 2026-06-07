@@ -14,8 +14,7 @@ const props = defineProps({
   robotStatus: { type: String, default: "制动" },
   robotStatusCode: { type: Number, default: 2 },
   speedRatio: { type: Number, default: 40 },
-  calib: { type: Object, default: () => ({ status: "idle", running: false, progress: 0, total: 9, message: "", errors: [], mean_error: 0.0, max_error: 0.0 }) },
-  isDark: { type: Boolean, default: true }
+  calib: { type: Object, default: () => ({ status: "idle", running: false, progress: 0, total: 9, message: "", errors: [], mean_error: 0.0, max_error: 0.0 }) }
 });
 
 const emit = defineEmits([
@@ -70,7 +69,7 @@ const handleJogClick = () => {
   <div class="space-y-6">
     
     <!-- 1. Device Connections Bento Item -->
-    <div :class="['p-4 rounded-xl border transition-all', props.isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-zinc-200 shadow-sm']">
+    <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
       <h4 class="flex items-center gap-2 font-display font-bold text-sm mb-3 text-[#2ec6d6]">
         <Link :size="16" />
         <span>{{ props.language === 'zh' ? '第一步：建立通信连接' : 'Step 1: Connect Controller' }}</span>
@@ -84,7 +83,7 @@ const handleJogClick = () => {
             v-model="inputIp"
             placeholder="192.168.1.220"
             :disabled="props.connected"
-            :class="['w-full px-3 py-2 text-xs font-mono rounded-lg border transition-all outline-none', props.isDark ? 'bg-slate-950 border-slate-800 text-cyan-300 focus:border-cyan-500' : 'bg-slate-50 border-zinc-300 text-zinc-800 focus:border-[#2ec6d6]']"
+            class="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-800 transition-all outline-none bg-slate-950 text-cyan-300 focus:border-cyan-500"
           />
         </div>
         <button
@@ -99,7 +98,7 @@ const handleJogClick = () => {
     </div>
 
     <!-- 2. Arm Status & Activation Bento Item -->
-    <div :class="['p-4 rounded-xl border transition-all', props.isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-zinc-200 shadow-sm']">
+    <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
       <h4 class="flex items-center gap-2 font-display font-bold text-sm mb-4 text-[#2ec6d6]">
         <Settings :size="16" />
         <span>{{ props.language === 'zh' ? '第二步与第三步：控制与使能状态' : 'Step 2 & 3: Initialization & Enable Controls' }}</span>
@@ -112,7 +111,7 @@ const handleJogClick = () => {
           <div class="text-xs text-slate-400 font-medium">
             {{ t.controllerState }}:
           </div>
-          <div :class="['p-3 rounded-lg border font-mono text-center flex flex-col justify-center min-h-[70px]', props.isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-zinc-200']">
+          <div class="p-3 rounded-lg border border-slate-800 font-mono text-center flex flex-col justify-center min-h-[70px] bg-slate-950">
             <span :class="['text-[11px] font-bold', props.initialized ? 'text-[#2ec6d6]' : 'text-amber-500 animate-pulse']">
               {{ props.initialized ? t.initSuccess : t.notSet }}
             </span>
@@ -201,7 +200,7 @@ const handleJogClick = () => {
     </div>
 
     <!-- 3. Global Speed Overrides Slider -->
-    <div :class="['p-4 rounded-xl border transition-all', props.isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-zinc-200 shadow-sm']">
+    <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
       <div class="flex items-center justify-between mb-2">
         <h4 class="flex items-center gap-2 font-display font-bold text-sm text-[#2ec6d6]">
           <Gauge :size="16" />
@@ -212,18 +211,26 @@ const handleJogClick = () => {
         </span>
       </div>
 
-      <input
-        id="speed_ratio_slider"
-        type="range"
-        min="0"
-        max="100"
-        :value="localSpeedRatio"
-        :disabled="!props.connected"
-        @input="handleSpeedSliderChange"
-        @mouseup="handleSpeedRelease"
-        @touchend="handleSpeedRelease"
-        class="w-full accent-[#2ec6d6] bg-slate-800 rounded-lg appearance-none h-2 cursor-pointer disabled:cursor-not-allowed"
-      />
+      <div class="flex items-center gap-4">
+        <input
+          id="speed_ratio_slider"
+          type="range"
+          min="0"
+          max="100"
+          :value="localSpeedRatio"
+          :disabled="!props.connected"
+          @input="handleSpeedSliderChange"
+          class="flex-1 accent-[#2ec6d6] bg-slate-800 rounded-lg appearance-none h-2 cursor-pointer disabled:cursor-not-allowed"
+        />
+        <button
+          id="apply_speed_ratio_btn"
+          @click="handleSpeedRelease"
+          :disabled="!props.connected"
+          class="px-3 py-1.5 text-xs font-display font-bold rounded-lg bg-[#2ec6d6] text-cyan-950 hover:bg-[#2ec6d6]/85 disabled:bg-slate-800 disabled:text-slate-600 border border-transparent disabled:border-transparent active:scale-95 transition-all cursor-pointer flex-shrink-0"
+        >
+          {{ props.language === 'zh' ? '应用' : 'Apply' }}
+        </button>
+      </div>
       <div class="flex justify-between text-[10px] text-slate-500 font-mono mt-1">
         <span>0 (SLOW)</span>
         <span>50 (OPTIMIZED)</span>
@@ -232,7 +239,7 @@ const handleJogClick = () => {
     </div>
 
     <!-- 4. Auto Calibration Panel -->
-    <div :class="['p-4 rounded-xl border transition-all', props.isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-zinc-200 shadow-sm']">
+    <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
       <div class="flex items-center justify-between mb-3 pb-2 border-b border-cyan-500/10">
         <h4 class="flex items-center gap-2 font-display font-bold text-sm text-[#2ec6d6]">
           <Sparkles :size="16" />
@@ -292,7 +299,7 @@ const handleJogClick = () => {
     </div>
 
     <!-- 5. Jog Interactive Step controls -->
-    <div :class="['p-4 rounded-xl border transition-all', props.isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-zinc-200 shadow-sm']">
+    <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
       <h4 class="flex items-center gap-2 font-display font-bold text-sm mb-3 text-[#2ec6d6]">
         <Navigation2 :size="16" class="rotate-45" />
         <span>{{ t.manualOption }}</span>
@@ -304,7 +311,7 @@ const handleJogClick = () => {
           <select
             id="jog_axis_select"
             v-model="selectedAxis"
-            :class="['w-full px-2 py-1.5 rounded-md border text-[11px]', props.isDark ? 'bg-slate-950 border-slate-800 text-cyan-300' : 'bg-white border-zinc-300 text-zinc-800']"
+            class="w-full px-2 py-1.5 rounded-md border border-slate-800 bg-slate-950 text-cyan-300 text-[11px]"
           >
             <option value="X">AXIS X (X-axis)</option>
             <option value="Y">AXIS Y (Y-axis)</option>
@@ -318,7 +325,7 @@ const handleJogClick = () => {
           <select
             id="jog_dir_select"
             v-model.number="jogDir"
-            :class="['w-full px-2 py-1.5 rounded-md border text-[11px]', props.isDark ? 'bg-slate-950 border-slate-800 text-cyan-300' : 'bg-white border-zinc-300 text-zinc-800']"
+            class="w-full px-2 py-1.5 rounded-md border border-slate-800 bg-slate-950 text-cyan-300 text-[11px]"
           >
             <option :value="1">+ dir (Positive)</option>
             <option :value="-1">- dir (Negative)</option>
@@ -331,7 +338,7 @@ const handleJogClick = () => {
             id="jog_dist_input"
             type="number"
             v-model.number="jogDist"
-            :class="['w-full px-2 py-1 rounded border text-[11px]', props.isDark ? 'bg-slate-950 border-slate-800 text-cyan-300' : 'bg-white border-zinc-300 text-zinc-850']"
+            class="w-full px-2 py-1 rounded border border-slate-800 bg-slate-950 text-cyan-300 text-[11px]"
           />
         </div>
       </div>
@@ -344,7 +351,7 @@ const handleJogClick = () => {
           :id="`quick_preset_${num}`"
           :key="num"
           @click="jogDist = num"
-          :class="['px-2 py-0.5 text-[9px] rounded font-bold border transition-all cursor-pointer', jogDist === num ? 'bg-[#2ec6d6] text-cyan-950 border-cyan-400' : props.isDark ? 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 border-zinc-200 text-zinc-600 hover:bg-slate-200']"
+          :class="['px-2 py-0.5 text-[9px] rounded font-bold border transition-all cursor-pointer', jogDist === num ? 'bg-[#2ec6d6] text-cyan-950 border-cyan-400' : 'bg-slate-955 border-slate-800 text-slate-400 hover:text-white bg-slate-950']"
         >
           {{ num }}{{ selectedAxis === 'U' ? '°' : 'mm' }}
         </button>

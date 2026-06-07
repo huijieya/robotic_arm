@@ -9,7 +9,6 @@ const props = defineProps({
   connected: { type: Boolean, default: false },
   visionRunning: { type: Boolean, default: false },
   pose: { type: Object, default: () => ({ x: 0, y: 0, z: 0, u: 0 }) },
-  isDark: { type: Boolean, default: true },
   getApiUrl: { type: Function, default: null }
 });
 
@@ -89,7 +88,7 @@ const handleTeachPlace = async (index) => {
   <div class="space-y-6">
     
     <!-- 1. Start and Stop Vision Sorting -->
-    <div :class="['p-4 rounded-xl border transition-all', props.isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-zinc-200 shadow-sm']">
+    <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
       <h4 class="flex items-center gap-2 font-display font-bold text-sm mb-3 text-[#2ec6d6]">
         <Eye :size="16" />
         <span>{{ t.visionModule }}</span>
@@ -138,7 +137,7 @@ const handleTeachPlace = async (index) => {
     </div>
 
     <!-- 2. Place Points Teach Control -->
-    <div :class="['p-4 rounded-xl border transition-all', props.isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-zinc-200 shadow-sm']">
+    <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
       <div class="flex items-center justify-between mb-3.5 pb-2 border-b border-cyan-500/10">
         <h4 class="flex items-center gap-2 font-display font-bold text-sm text-[#2ec6d6]">
           <Hammer :size="16" />
@@ -161,11 +160,11 @@ const handleTeachPlace = async (index) => {
       <div class="space-y-3.5 font-mono text-xs">
         
         <!-- Pick point teach item -->
-        <div :class="['p-3 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-3', props.isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-zinc-100']">
+        <div class="p-3 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950 border-slate-800">
           <div class="space-y-1">
             <div class="flex items-center gap-1.5 font-bold">
               <MapPin :size="14" class="text-[#2ec6d6]" />
-              <span :class="props.isDark ? 'text-white' : 'text-zinc-800'">{{ t.pickPoint }}</span>
+              <span class="text-white">{{ t.pickPoint }}</span>
             </div>
             <div class="text-[10px] text-slate-500">
               STATUS: 
@@ -193,12 +192,12 @@ const handleTeachPlace = async (index) => {
             v-for="idx in [0, 1, 2]"
             :id="`place_teach_item_${idx}`"
             :key="idx" 
-            :class="['p-3 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-3', props.isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-zinc-100']"
+            class="p-3 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-955 bg-slate-950 border-slate-800"
           >
             <div class="space-y-1">
               <div class="flex items-center gap-1.5 font-bold">
                 <MapPin :size="14" class="text-amber-500" />
-                <span :class="props.isDark ? 'text-white' : 'text-zinc-800'">Place Area [{{ idx }}]</span>
+                <span class="text-white bg-transparent">Place Area [{{ idx }}]</span>
               </div>
               <div class="text-[10px] text-slate-500">
                 STATUS: 

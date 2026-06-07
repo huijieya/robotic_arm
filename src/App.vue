@@ -3,15 +3,13 @@ import { ref, onMounted, onUnmounted, watch, computed } from "vue";
 import { translations } from "./translations";
 import ApiDocsModal from "./components/ApiDocsModal.vue";
 import CameraView from "./components/CameraView.vue";
-import ArmVisualizer from "./components/ArmVisualizer.vue";
 import ControlDashboard from "./components/ControlDashboard.vue";
 import VisionSheduler from "./components/VisionSheduler.vue";
 import LogsPanel from "./components/LogsPanel.vue";
-import { Sun, Moon, Settings, FileText, X } from "lucide-vue-next";
+import { Settings, FileText, X } from "lucide-vue-next";
 import { Controller, Vision, updateApiBaseUrl } from "./api/index";
 
 const language = ref("zh");
-const isDark = ref(true);
 const showDocs = ref(false);
 
 // Connection & status states
@@ -417,11 +415,11 @@ const updateBackendAddress = (val) => {
 
 // Styles mapping matching Logo branding 0x2ec6d6
 const outerBgClass = computed(() => {
-  return isDark.value ? "bg-[#0a0e17] text-slate-300" : "bg-zinc-50 text-zinc-700";
+  return "bg-[#0a0e17] text-slate-300";
 });
 
 const innerCardBgClass = computed(() => {
-  return isDark.value ? "bg-slate-900/60 border-slate-800/80" : "bg-white border-zinc-200/80";
+  return "bg-slate-900/60 border-slate-800/80";
 });
 </script>
 
@@ -429,7 +427,7 @@ const innerCardBgClass = computed(() => {
   <div :class="['min-h-screen font-sans transition-colors duration-300 relative flex flex-col', outerBgClass]">
 
     <!-- Modern Compact Header -->
-    <header :class="['sticky top-0 z-40 backdrop-blur-md border-b transition-all', isDark ? 'bg-[#0a0e17]/85 border-slate-800/80' : 'bg-white/85 border-zinc-200']">
+    <header class="sticky top-0 z-40 backdrop-blur-md border-b transition-all bg-[#0a0e17]/85 border-slate-800/80">
       <div class="max-w-[1400px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         
         <!-- Logo Brand Area -->
@@ -442,7 +440,7 @@ const innerCardBgClass = computed(() => {
             <div class="flex items-center gap-2">
               <h1 class="font-display font-extrabold text-sm sm:text-base tracking-tight text-white logo-glow uppercase flex items-center">
                 <span class="text-[#2ec6d6]">NEXUS</span>&nbsp;
-                <span :class="isDark ? 'text-slate-300' : 'text-zinc-800'">SCARA</span>
+                <span class="text-slate-300">SCARA</span>
               </h1>
               <span class="text-[9px] font-mono font-bold bg-[#2ec6d6]/10 text-[#2ec6d6] px-1 py-0.2 rounded border border-[#2ec6d6]/20">
                 SINGLE ARM
@@ -461,8 +459,6 @@ const innerCardBgClass = computed(() => {
           <span class="text-slate-500">BACKEND: <span class="text-amber-400 font-bold">{{ backendAddress || (typeof window !== 'undefined' && window.location ? window.location.host : 'localhost:3000') }}</span></span>
           <span class="text-slate-600">|</span>
           <span class="text-slate-500">INIT: <span :class="initialized ? 'text-[#2ec6d6]' : 'text-amber-500'">{{ initialized ? "OK" : "NULL" }}</span></span>
-          <span class="text-slate-600">|</span>
-          <span class="text-slate-500">POSE: <span class="text-[#2ec6d6]">X:{{ pose.x.toFixed(1) }} Y:{{ pose.y.toFixed(1) }} Z:{{ pose.z.toFixed(1) }}</span></span>
           <button 
             id="header_disconnect_btn"
             @click="handleDisconnect"
@@ -501,18 +497,7 @@ const innerCardBgClass = computed(() => {
             </div>
           </button>
 
-          <!-- 2. Style Theme Switch (明暗转换) -->
-          <button
-            id="mode_theme_toggle"
-            @click="isDark = !isDark"
-            class="p-2 rounded-lg border border-slate-700/80 hover:border-cyan-400/40 bg-slate-900/30 text-slate-400 hover:text-white transition-all cursor-pointer active:scale-95"
-            :title="isDark ? 'Light Mode' : 'Dark Mode'"
-          >
-            <Sun v-if="isDark" :size="15" class="text-[#2ec6d6]" />
-            <Moon v-else :size="15" class="text-cyan-600" />
-          </button>
-
-          <!-- 3. Internationalization languages Select (中英日韩) -->
+          <!-- 2. Internationalization languages Select (中英日韩) -->
           <div class="flex items-center border border-slate-700/80 rounded-lg p-0.5 bg-slate-900/30">
             <button
               v-for="lang in ['zh', 'en', 'ja', 'ko']"
@@ -537,24 +522,83 @@ const innerCardBgClass = computed(() => {
         
         <!-- LEFT HALF COLUMN: TELEMETRY AND LIVESTEP ANIMATOR -->
         <div class="xl:col-span-5 space-y-6">
+
+          <!-- 1. System Status Info Overview (系统状态总览) -->
+          <div :class="['p-5 rounded-2xl border space-y-4 shadow-xl relative transition-all duration-200 hover:border-cyan-500/30', innerCardBgClass, 'box-glow']">
+            <div class="flex items-center justify-between border-b border-slate-800/60 pb-3">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-[#2ec6d6] animate-pulse" />
+                <h3 class="font-display font-black text-sm uppercase tracking-wider text-white">
+                  {{ language === 'zh' ? '系统状态总览' : 'System Status Overview' }}
+                </h3>
+              </div>
+              <span class="text-[9px] font-mono text-[#2ec6d6] bg-[#2ec6d6]/10 px-2 py-0.5 rounded border border-[#2ec6d6]/20 font-bold uppercase tracking-wider">
+                HUD TELEMETRY
+              </span>
+            </div>
+
+            <div class="space-y-3.5 text-xs font-sans">
+              <!-- 1.1 机械臂状态 -->
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 font-medium">{{ language === 'zh' ? '机械臂状态：' : 'Robot State:' }}</span>
+                <span :class="[
+                  'px-2.5 py-1 rounded text-xs font-black min-w-[70px] text-center shadow-xs',
+                  robotStatus === '错误' || robotStatusCode === 1 || robotStatus === '急停' ? 'bg-rose-500 text-rose-950' :
+                  robotStatus === '运行' || robotStatusCode === 4 ? 'bg-emerald-500 text-emerald-950' :
+                  robotStatus === '使能' || robotStatusCode === 3 ? 'bg-amber-500 text-amber-950' : 'bg-slate-700 text-slate-100'
+                ]">
+                  {{ robotStatus }}
+                </span>
+              </div>
+
+              <!-- 1.2 当前位姿 -->
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 font-medium">{{ language === 'zh' ? '当前位姿：' : 'Current Pose:' }}</span>
+                <span class="font-mono text-[#2ec6d6] font-semibold bg-slate-950/70 px-2.5 py-1 rounded-lg border border-slate-800/60 shadow-inner">
+                  X={{ pose.x.toFixed(2) }}, Y={{ pose.y.toFixed(2) }}, Z={{ pose.z.toFixed(2) }}, U={{ pose.u.toFixed(2) }}
+                </span>
+              </div>
+
+              <!-- 1.3 速度比 (实时) -->
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 font-medium">{{ language === 'zh' ? '速度比 (实时)：' : 'Speed Ratio (Real-time):' }}</span>
+                <span class="font-mono text-zinc-100 font-bold bg-slate-950/70 px-2.5 py-1 rounded-lg border border-slate-800/60 shadow-inner">
+                  {{ speedRatio }} %
+                </span>
+              </div>
+
+              <!-- 1.4 程序状态 -->
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 font-medium">{{ language === 'zh' ? '程序状态：' : 'Program Status:' }}</span>
+                <div class="flex items-center gap-1.5">
+                  <span :class="[
+                    'font-semibold text-xs',
+                    programStatus === '运行中' ? 'text-emerald-400' : 'text-slate-400'
+                  ]">
+                    {{ programStatus }}
+                  </span>
+                  <span v-if="programStatus === '运行中'" class="text-emerald-400 text-xs font-bold font-mono">▶</span>
+                </div>
+              </div>
+
+              <!-- 1.5 控制器当前状态 -->
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 font-medium">{{ language === 'zh' ? '控制器当前状态：' : 'Controller State:' }}</span>
+                <span class="text-slate-200 bg-slate-950/40 px-2.5 py-1 rounded-lg border border-slate-800/50 font-medium max-w-[200px] truncate text-right text-[11px]" :title="controllerState">
+                  {{ controllerState }}
+                </span>
+              </div>
+            </div>
+          </div>
           
           <CameraView
             :language="language"
             :connected="connected"
-            :isDark="isDark"
             :roi="roi"
             @teach-roi-click="handleTeachRoiClick"
             @teach-roi-save="handleTeachRoiSave"
             :teachRoiActive="teachRoiActive"
             :wsBinaryBlob="wsBinaryBlob"
-          />
-
-          <ArmVisualizer
-            :language="language"
-            :pose="pose"
-            :robotStatus="robotStatus"
-            :isDark="isDark"
-            :visionRunning="visionRunning"
           />
 
          </div>
@@ -582,7 +626,6 @@ const innerCardBgClass = computed(() => {
               @jog="handleJog"
               :calib="calib"
               @trigger-calibration="handleTriggerCalibration"
-              :isDark="isDark"
             />
 
             <VisionSheduler
@@ -592,14 +635,12 @@ const innerCardBgClass = computed(() => {
               @start-vision="handleStartSorting"
               @stop-vision="handleStopSorting"
               :pose="pose"
-              :isDark="isDark"
               :getApiUrl="getApiUrl"
             />
 
             <LogsPanel
               :language="language"
               :connected="connected"
-              :isDark="isDark"
               :getApiUrl="getApiUrl"
             />
 
@@ -630,7 +671,7 @@ const innerCardBgClass = computed(() => {
         </div>
 
         <div class="space-y-1">
-          <h3 :class="['font-display font-extrabold text-lg', isDark ? 'text-white' : 'text-zinc-800']">
+          <h3 class="font-display font-extrabold text-lg text-white">
             {{ t.title }}
           </h3>
           <p class="text-xs text-slate-400">
@@ -648,7 +689,7 @@ const innerCardBgClass = computed(() => {
               id="gateway_ip_input"
               type="text"
               v-model="ip"
-              :class="['w-full px-4 py-2 font-mono text-sm rounded-xl border outline-none text-center', isDark ? 'bg-slate-950 border-slate-800 text-[#2ec6d6] focus:border-cyan-400' : 'bg-zinc-50 border-zinc-200 text-zinc-800 focus:border-[#2ec6d6]']"
+              class="w-full px-4 py-2 font-mono text-sm rounded-xl border outline-none text-center bg-slate-950 border-slate-800 text-[#2ec6d6] focus:border-cyan-400"
               placeholder="192.168.1.220"
             />
           </div>
@@ -663,7 +704,7 @@ const innerCardBgClass = computed(() => {
               type="text"
               :value="backendAddress"
               @input="e => updateBackendAddress(e.target.value)"
-              :class="['w-full px-4 py-2 font-mono text-sm rounded-xl border outline-none text-center', isDark ? 'bg-slate-950 border-slate-800 text-[#ccc] focus:border-cyan-400' : 'bg-zinc-50 border-zinc-200 text-zinc-800 focus:border-[#2ec6d6]']"
+              class="w-full px-4 py-2 font-mono text-sm rounded-xl border outline-none text-center bg-slate-950 border-slate-800 text-[#ccc] focus:border-cyan-400"
               :placeholder="t.backendAddressPlaceholder"
             />
             <span class="text-[9px] text-slate-400 font-mono block leading-normal text-center">
@@ -705,7 +746,7 @@ const innerCardBgClass = computed(() => {
     />
 
     <!-- Industrial Footer Branding -->
-    <footer :class="['mt-auto py-4 border-t text-center font-mono text-[9px] hover:text-white text-slate-500 transition-colors', isDark ? 'bg-[#070b12] border-slate-800/40' : 'bg-zinc-100 border-zinc-200']">
+    <footer class="mt-auto py-4 border-t text-center font-mono text-[9px] hover:text-white text-slate-500 transition-colors bg-[#070b12] border-slate-800/40">
       <div class="max-w-[1400px] mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
         <span>&copy; 2026 NEXUS INDUSTRIAL SYSTEM TECHNOLOGY INC.</span>
         <span class="text-[#2ec6d6]">SYS_PORT: 3000 | CORE_WS: VALIDATED</span>

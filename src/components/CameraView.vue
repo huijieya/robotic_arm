@@ -6,7 +6,6 @@ import { Eye, Focus, RefreshCw, AlertTriangle, ShieldCheck } from "lucide-vue-ne
 const props = defineProps({
   language: { type: String, default: "zh" },
   connected: { type: Boolean, default: false },
-  isDark: { type: Boolean, default: true },
   roi: { type: Object, default: () => ({ valid: true, x: 100, y: 120, w: 300, h: 240 }) },
   teachRoiActive: { type: Boolean, default: false },
   wsBinaryBlob: { type: null, default: null }
@@ -66,7 +65,7 @@ const handleSaveRoi = () => {
 <template>
   <div 
     id="camera_viewport_container"
-    :class="['rounded-xl border p-4 transition-all relative overflow-hidden', props.isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-zinc-200 shadow-sm']"
+    class="rounded-xl border border-slate-800 p-4 transition-all relative overflow-hidden bg-slate-900/80"
     @mouseenter="isHovered = true"
     @mouseleave="isHovered = false"
   >
@@ -74,7 +73,7 @@ const handleSaveRoi = () => {
     <div class="flex items-center justify-between mb-3 border-b pb-2 border-cyan-500/10">
       <div class="flex items-center gap-2">
         <Eye class="text-[#2ec6d6]" :size="18" />
-        <span :class="['font-display font-bold text-sm', props.isDark ? 'text-white' : 'text-zinc-800']">
+        <span class="font-display font-bold text-sm text-white">
           {{ t.cameraFeed }}
         </span>
       </div>
@@ -173,7 +172,7 @@ const handleSaveRoi = () => {
     <div class="mt-4 space-y-3">
       <div class="flex items-center justify-between">
         <div class="flex flex-col">
-          <span :class="['text-xs font-semibold', props.isDark ? 'text-slate-300' : 'text-zinc-700']">
+          <span class="text-xs font-semibold text-slate-300">
             {{ t.teachRoiTitle }}
           </span>
           <span class="text-[10px] text-slate-400">

@@ -399,16 +399,6 @@ const handleSelectEndpoint = (index) => {
 
             </div>
 
-            <!-- Global Envelope Standard helper -->
-            <div class="p-3.5 bg-cyan-950/10 rounded-lg border border-cyan-500/10 text-[11px] font-mono text-cyan-300 flex flex-col gap-1.5 leading-relaxed">
-              <span class="font-bold text-cyan-400 text-xs">💡 Base Response Envelope Pattern:</span>
-              <span>{</span>
-              <span class="pl-4">"success": <span class="text-amber-300">true</span>,</span>
-              <span class="pl-4">"code": <span class="text-amber-300">0</span>,</span>
-              <span class="pl-4">"data": { ... } <span class="text-slate-500">// {{ props.language === 'zh' ? '成功时为具体内容，失败可能为 null' : 'Data payload on success, null on error' }}</span></span>
-              <span>}</span>
-            </div>
-
           </div>
         </div>
 

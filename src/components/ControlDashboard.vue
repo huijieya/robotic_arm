@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onUnmounted } from "vue";
 import { translations } from "../translations";
 import { 
   Link, Play, Square, AlertTriangle, Settings, 
@@ -39,9 +39,27 @@ watch(() => props.ip, (newIp) => {
   }
 });
 
+const showApplyConfirm = ref(false);
+
+const handleSpeedSliderChange = (e) => {
+  localSpeedRatio.value = parseInt(e.target.value);
+};
+
+const handleSpeedRelease = () => {
+  showApplyConfirm.value = true;
+};
+
+const confirmSpeedChange = () => {
+  emit("speed-ratio-change", localSpeedRatio.value);
+  showApplyConfirm.value = false;
+};
+
+const cancelSpeedChange = () => {
+  showApplyConfirm.value = false;
+  localSpeedRatio.value = props.speedRatio;
+};
+
 // Jog parameters states
-const selectedAxis = ref("X");
-const jogDir = ref(1);
 const jogDist = ref(10);
 
 const handleConnectClick = async () => {
@@ -52,17 +70,42 @@ const handleConnectClick = async () => {
   }, 1000);
 };
 
-const handleSpeedSliderChange = (e) => {
-  localSpeedRatio.value = parseInt(e.target.value);
+// Continuous jog handling (supports click & long press)
+let jogTimeout = null;
+let jogInterval = null;
+let isJoggingActive = false;
+
+const startContinuousJog = (axis, dir) => {
+  if (!props.connected || props.robotStatusCode !== 3) return;
+  if (isJoggingActive) return;
+  isJoggingActive = true;
+
+  // 1. Immediately trigger once
+  emit("jog", axis, dir, jogDist.value);
+
+  // 2. Set timeout for continuous movement if held down
+  jogTimeout = setTimeout(() => {
+    jogInterval = setInterval(() => {
+      emit("jog", axis, dir, jogDist.value);
+    }, 250);
+  }, 500);
 };
 
-const handleSpeedRelease = () => {
-  emit("speed-ratio-change", localSpeedRatio.value);
+const stopContinuousJog = () => {
+  isJoggingActive = false;
+  if (jogTimeout) {
+    clearTimeout(jogTimeout);
+    jogTimeout = null;
+  }
+  if (jogInterval) {
+    clearInterval(jogInterval);
+    jogInterval = null;
+  }
 };
 
-const handleJogClick = () => {
-  emit("jog", selectedAxis.value, jogDir.value, jogDist.value);
-};
+onUnmounted(() => {
+  stopContinuousJog();
+});
 </script>
 
 <template>
@@ -126,7 +169,7 @@ const handleJogClick = () => {
           </div>
           <div :class="['p-3 rounded-lg border font-mono text-center flex items-center justify-center gap-2 min-h-[50px]', props.robotStatusCode === 3 || props.robotStatusCode === 4 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : props.robotStatusCode === 1 ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 animate-pulse' : 'bg-amber-500/10 border-amber-500/30 text-amber-500']">
             <template v-if="props.robotStatusCode === 3 || props.robotStatusCode === 4">
-              <CheckCircle :size="14" class="animate-spin text-emerald-400" />
+              <CheckCircle :size="14" class="text-emerald-400" />
               <span class="text-xs font-bold">{{ t.enabled }}</span>
             </template>
             <template v-else-if="props.robotStatusCode === 1">
@@ -206,9 +249,11 @@ const handleJogClick = () => {
           <Gauge :size="16" />
           <span>{{ t.speedRatio }}</span>
         </h4>
-        <span class="font-mono text-xs font-extrabold text-[#2ec6d6] px-2 py-0.5 rounded bg-[#2ec6d6]/10">
-          {{ localSpeedRatio }}%
-        </span>
+        <div class="flex items-center gap-2 text-[10px] font-mono select-none">
+          <span class="text-slate-400">{{ props.language === 'zh' ? '当前值:' : 'Current:' }} <span class="text-white font-bold">{{ props.speedRatio }}%</span></span>
+          <span class="text-slate-600">|</span>
+          <span class="text-slate-400">{{ props.language === 'zh' ? '调整值:' : 'Target:' }} <span class="text-[#2ec6d6] font-extrabold">{{ localSpeedRatio }}%</span></span>
+        </div>
       </div>
 
       <div class="flex items-center gap-4">
@@ -218,20 +263,44 @@ const handleJogClick = () => {
           min="0"
           max="100"
           :value="localSpeedRatio"
-          :disabled="!props.connected"
+          :disabled="!props.connected || showApplyConfirm"
           @input="handleSpeedSliderChange"
           class="flex-1 accent-[#2ec6d6] bg-slate-800 rounded-lg appearance-none h-2 cursor-pointer disabled:cursor-not-allowed"
         />
         <button
           id="apply_speed_ratio_btn"
           @click="handleSpeedRelease"
-          :disabled="!props.connected"
-          class="px-3 py-1.5 text-xs font-display font-bold rounded-lg bg-[#2ec6d6] text-cyan-950 hover:bg-[#2ec6d6]/85 disabled:bg-slate-800 disabled:text-slate-600 border border-transparent disabled:border-transparent active:scale-95 transition-all cursor-pointer flex-shrink-0"
+          :disabled="!props.connected || localSpeedRatio === props.speedRatio || showApplyConfirm"
+          class="px-3 py-1.5 text-xs font-display font-bold rounded-lg bg-[#2ec6d6] text-cyan-950 hover:bg-[#2ec6d6]/85 disabled:bg-slate-850 disabled:text-slate-600 border border-transparent disabled:border-transparent active:scale-95 transition-all cursor-pointer flex-shrink-0"
         >
           {{ props.language === 'zh' ? '应用' : 'Apply' }}
         </button>
       </div>
-      <div class="flex justify-between text-[10px] text-slate-500 font-mono mt-1">
+
+      <!-- Second level confirmation prompt -->
+      <div v-if="showApplyConfirm" class="mt-3 p-2.5 bg-cyan-950/25 border border-cyan-500/20 rounded-lg flex items-center justify-between text-xs font-mono animate-fadeIn">
+        <span class="text-[#2ec6d6]">
+          {{ props.language === 'zh' ? `确认应用新速度 ${localSpeedRatio}% ？` : `Confirm speed change to ${localSpeedRatio}%?` }}
+        </span>
+        <div class="flex items-center gap-2">
+          <button
+            id="confirm_speed_btn"
+            @click="confirmSpeedChange"
+            class="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded text-[10px] cursor-pointer"
+          >
+            {{ props.language === 'zh' ? '确定' : 'Confirm' }}
+          </button>
+          <button
+            id="cancel_speed_btn"
+            @click="cancelSpeedChange"
+            class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded text-[10px] cursor-pointer"
+          >
+            {{ props.language === 'zh' ? '取消' : 'Cancel' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="flex justify-between text-[10px] text-slate-500 font-mono mt-1 select-none">
         <span>0 (SLOW)</span>
         <span>50 (OPTIMIZED)</span>
         <span>100 (HIGH SPEED)</span>
@@ -251,7 +320,7 @@ const handleJogClick = () => {
           :disabled="!props.connected || props.robotStatusCode !== 3 || props.calib.running"
           :class="['px-3 py-1.5 text-[11px] font-display font-semibold rounded-lg shadow-sm transition-all cursor-pointer', props.connected && props.robotStatusCode === 3 && !props.calib.running ? 'bg-[#2ec6d6] text-cyan-950 hover:bg-[#2ec6d6]/80 active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed']"
         >
-          {{ props.calib.running ? "CALIBRATING..." : "START CALIBRATION" }}
+          {{ props.calib.running ? t.calibRunningBtn : t.startCalibBtn }}
         </button>
       </div>
 
@@ -298,73 +367,185 @@ const handleJogClick = () => {
       </div>
     </div>
 
-    <!-- 5. Jog Interactive Step controls -->
+    <!-- 5. Jog Interactive Step controls (Manual Teleoperation) -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
-      <h4 class="flex items-center gap-2 font-display font-bold text-sm mb-3 text-[#2ec6d6]">
+      <h4 class="flex items-center gap-2 font-display font-bold text-sm mb-3.5 text-[#2ec6d6] select-none">
         <Navigation2 :size="16" class="rotate-45" />
         <span>{{ t.manualOption }}</span>
       </h4>
 
-      <div class="grid grid-cols-3 gap-3 text-xs mb-3 font-mono">
-        <div class="space-y-1">
-          <span class="text-slate-400 block text-[10px]">{{ t.jogAxis }}:</span>
-          <select
-            id="jog_axis_select"
-            v-model="selectedAxis"
-            class="w-full px-2 py-1.5 rounded-md border border-slate-800 bg-slate-950 text-cyan-300 text-[11px]"
-          >
-            <option value="X">AXIS X (X-axis)</option>
-            <option value="Y">AXIS Y (Y-axis)</option>
-            <option value="Z">AXIS Z (Vertical)</option>
-            <option value="U">AXIS U (Flange °)</option>
-          </select>
-        </div>
-
-        <div class="space-y-1">
-          <span class="text-slate-400 block text-[10px]">{{ t.jogDirection }}:</span>
-          <select
-            id="jog_dir_select"
-            v-model.number="jogDir"
-            class="w-full px-2 py-1.5 rounded-md border border-slate-800 bg-slate-950 text-cyan-300 text-[11px]"
-          >
-            <option :value="1">+ dir (Positive)</option>
-            <option :value="-1">- dir (Negative)</option>
-          </select>
-        </div>
-
-        <div class="space-y-1">
-          <span class="text-slate-400 block text-[10px]">{{ t.jogStepDist }}:</span>
+      <!-- Step configuration layout similar to reference attachment -->
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4 text-xs font-mono select-none">
+        <div class="flex items-center gap-2.5">
+          <span class="text-slate-300 font-bold whitespace-nowrap">
+            {{ props.language === 'zh' ? '步长 (mm/deg):' : 'Step (mm/deg):' }}
+          </span>
           <input
             id="jog_dist_input"
             type="number"
             v-model.number="jogDist"
-            class="w-full px-2 py-1 rounded border border-slate-800 bg-slate-950 text-cyan-300 text-[11px]"
+            class="w-16 px-2 py-1 rounded border border-slate-800 bg-slate-950 text-cyan-300 text-xs font-bold text-center outline-none focus:border-[#2ec6d6]"
           />
+        </div>
+        <!-- Rapid click presets -->
+        <div class="flex items-center gap-1.5 bg-slate-950/40 p-1 rounded-md border border-slate-850">
+          <span class="text-[9px] text-slate-500 font-bold px-1 uppercase tracking-wider">
+            {{ props.language === 'zh' ? '快捷' : 'Presets' }}
+          </span>
+          <button
+            v-for="num in [1, 10, 50]"
+            :id="`quick_preset_${num}`"
+            :key="num"
+            @click="jogDist = num"
+            :class="['px-2 py-0.5 text-[9px] rounded font-bold border transition-all cursor-pointer', jogDist === num ? 'bg-[#2ec6d6] text-cyan-950 border-[#2ec6d6]' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white']"
+          >
+            {{ num }}
+          </button>
         </div>
       </div>
 
-      <!-- Rapid presets -->
-      <div class="flex items-center gap-1.5 mb-3 font-mono">
-        <span class="text-[10px] text-slate-500">QUICK PRESET:</span>
-        <button
-          v-for="num in [0.5, 1, 10, 50]"
-          :id="`quick_preset_${num}`"
-          :key="num"
-          @click="jogDist = num"
-          :class="['px-2 py-0.5 text-[9px] rounded font-bold border transition-all cursor-pointer', jogDist === num ? 'bg-[#2ec6d6] text-cyan-950 border-cyan-400' : 'bg-slate-955 border-slate-800 text-slate-400 hover:text-white bg-slate-950']"
-        >
-          {{ num }}{{ selectedAxis === 'U' ? '°' : 'mm' }}
-        </button>
+      <!-- Combined Joint button control matrix which supports Tap and Hold down continuous action -->
+      <div class="p-3 bg-slate-950/50 rounded-lg border border-slate-800/80 space-y-3">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 items-center justify-between text-xs font-mono">
+          
+          <!-- Axis X -->
+          <div class="flex items-center justify-between bg-slate-950/60 p-2 rounded-lg border border-slate-900/85">
+            <span class="text-slate-300 font-extrabold text-sm w-4 select-none">X</span>
+            <div class="flex gap-1">
+              <button
+                id="jog_btn_x_neg"
+                @mousedown="startContinuousJog('X', -1)"
+                @mouseup="stopContinuousJog"
+                @mouseleave="stopContinuousJog"
+                @touchstart.prevent="startContinuousJog('X', -1)"
+                @touchend="stopContinuousJog"
+                @touchcancel="stopContinuousJog"
+                :disabled="!props.connected || props.robotStatusCode !== 3"
+                class="w-10 h-8 flex items-center justify-center p-0 border border-slate-700 bg-slate-900 text-slate-300 hover:text-[#2ec6d6] hover:border-[#2ec6d6] disabled:border-slate-800 disabled:text-slate-600 rounded text-xs font-black transition-all select-none active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:active:scale-100"
+              >
+                X-
+              </button>
+              <button
+                id="jog_btn_x_pos"
+                @mousedown="startContinuousJog('X', 1)"
+                @mouseup="stopContinuousJog"
+                @mouseleave="stopContinuousJog"
+                @touchstart.prevent="startContinuousJog('X', 1)"
+                @touchend="stopContinuousJog"
+                @touchcancel="stopContinuousJog"
+                :disabled="!props.connected || props.robotStatusCode !== 3"
+                class="w-10 h-8 flex items-center justify-center p-0 border border-slate-700 bg-slate-900 text-slate-300 hover:text-[#2ec6d6] hover:border-[#2ec6d6] disabled:border-slate-800 disabled:text-slate-600 rounded text-xs font-black transition-all select-none active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:active:scale-100"
+              >
+                X+
+              </button>
+            </div>
+          </div>
+
+          <!-- Axis Y -->
+          <div class="flex items-center justify-between bg-slate-950/60 p-2 rounded-lg border border-slate-900/85">
+            <span class="text-slate-300 font-extrabold text-sm w-4 select-none">Y</span>
+            <div class="flex gap-1">
+              <button
+                id="jog_btn_y_neg"
+                @mousedown="startContinuousJog('Y', -1)"
+                @mouseup="stopContinuousJog"
+                @mouseleave="stopContinuousJog"
+                @touchstart.prevent="startContinuousJog('Y', -1)"
+                @touchend="stopContinuousJog"
+                @touchcancel="stopContinuousJog"
+                :disabled="!props.connected || props.robotStatusCode !== 3"
+                class="w-10 h-8 flex items-center justify-center p-0 border border-slate-700 bg-slate-900 text-slate-300 hover:text-[#2ec6d6] hover:border-[#2ec6d6] disabled:border-slate-800 disabled:text-slate-600 rounded text-xs font-black transition-all select-none active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:active:scale-100"
+              >
+                Y-
+              </button>
+              <button
+                id="jog_btn_y_pos"
+                @mousedown="startContinuousJog('Y', 1)"
+                @mouseup="stopContinuousJog"
+                @mouseleave="stopContinuousJog"
+                @touchstart.prevent="startContinuousJog('Y', 1)"
+                @touchend="stopContinuousJog"
+                @touchcancel="stopContinuousJog"
+                :disabled="!props.connected || props.robotStatusCode !== 3"
+                class="w-10 h-8 flex items-center justify-center p-0 border border-slate-700 bg-slate-900 text-slate-300 hover:text-[#2ec6d6] hover:border-[#2ec6d6] disabled:border-slate-800 disabled:text-slate-600 rounded text-xs font-black transition-all select-none active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:active:scale-100"
+              >
+                Y+
+              </button>
+            </div>
+          </div>
+
+          <!-- Axis Z -->
+          <div class="flex items-center justify-between bg-slate-950/60 p-2 rounded-lg border border-slate-900/85">
+            <span class="text-slate-300 font-extrabold text-sm w-4 select-none">Z</span>
+            <div class="flex gap-1">
+              <button
+                id="jog_btn_z_neg"
+                @mousedown="startContinuousJog('Z', -1)"
+                @mouseup="stopContinuousJog"
+                @mouseleave="stopContinuousJog"
+                @touchstart.prevent="startContinuousJog('Z', -1)"
+                @touchend="stopContinuousJog"
+                @touchcancel="stopContinuousJog"
+                :disabled="!props.connected || props.robotStatusCode !== 3"
+                class="w-10 h-8 flex items-center justify-center p-0 border border-slate-700 bg-slate-900 text-slate-300 hover:text-[#2ec6d6] hover:border-[#2ec6d6] disabled:border-slate-800 disabled:text-slate-600 rounded text-xs font-black transition-all select-none active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:active:scale-100"
+              >
+                Z-
+              </button>
+              <button
+                id="jog_btn_z_pos"
+                @mousedown="startContinuousJog('Z', 1)"
+                @mouseup="stopContinuousJog"
+                @mouseleave="stopContinuousJog"
+                @touchstart.prevent="startContinuousJog('Z', 1)"
+                @touchend="stopContinuousJog"
+                @touchcancel="stopContinuousJog"
+                :disabled="!props.connected || props.robotStatusCode !== 3"
+                class="w-10 h-8 flex items-center justify-center p-0 border border-slate-700 bg-slate-900 text-slate-300 hover:text-[#2ec6d6] hover:border-[#2ec6d6] disabled:border-slate-800 disabled:text-slate-600 rounded text-xs font-black transition-all select-none active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:active:scale-100"
+              >
+                Z+
+              </button>
+            </div>
+          </div>
+
+          <!-- Axis U -->
+          <div class="flex items-center justify-between bg-slate-950/60 p-2 rounded-lg border border-slate-900/85">
+            <span class="text-slate-300 font-extrabold text-sm w-4 select-none">U</span>
+            <div class="flex gap-1">
+              <button
+                id="jog_btn_u_neg"
+                @mousedown="startContinuousJog('U', -1)"
+                @mouseup="stopContinuousJog"
+                @mouseleave="stopContinuousJog"
+                @touchstart.prevent="startContinuousJog('U', -1)"
+                @touchend="stopContinuousJog"
+                @touchcancel="stopContinuousJog"
+                :disabled="!props.connected || props.robotStatusCode !== 3"
+                class="w-10 h-8 flex items-center justify-center p-0 border border-slate-700 bg-slate-900 text-slate-300 hover:text-[#2ec6d6] hover:border-[#2ec6d6] disabled:border-slate-800 disabled:text-slate-600 rounded text-xs font-black transition-all select-none active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:active:scale-100"
+              >
+                U-
+              </button>
+              <button
+                id="jog_btn_u_pos"
+                @mousedown="startContinuousJog('U', 1)"
+                @mouseup="stopContinuousJog"
+                @mouseleave="stopContinuousJog"
+                @touchstart.prevent="startContinuousJog('U', 1)"
+                @touchend="stopContinuousJog"
+                @touchcancel="stopContinuousJog"
+                :disabled="!props.connected || props.robotStatusCode !== 3"
+                class="w-10 h-8 flex items-center justify-center p-0 border border-slate-700 bg-slate-900 text-slate-300 hover:text-[#2ec6d6] hover:border-[#2ec6d6] disabled:border-slate-800 disabled:text-slate-600 rounded text-xs font-black transition-all select-none active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:active:scale-100"
+              >
+                U+
+              </button>
+            </div>
+          </div>
+
+        </div>
       </div>
 
-      <button
-        id="trigger_jog_step_btn"
-        @click="handleJogClick"
-        :disabled="!props.connected || props.robotStatusCode !== 3"
-        :class="['w-full py-2.5 rounded-lg text-xs font-display font-bold shadow-sm cursor-pointer transition-all', props.connected && props.robotStatusCode === 3 ? 'bg-[#2ec6d6]/25 border border-[#2ec6d6] text-[#2ec6d6] hover:bg-[#2ec6d6]/35 active:scale-95' : 'bg-slate-800 text-slate-600 border border-transparent cursor-not-allowed']"
-      >
-        {{ t.triggerJog }}
-      </button>
+      <div class="text-[10px] text-slate-500 font-sans italic text-center select-none pt-2.5 leading-normal">
+        {{ props.language === 'zh' ? '※ 手动遥控：点击进行短距离移动；按住不放可连续高速移动。' : '※ Teleoperation advice: Tap button for single step; hold down for high-frequency continuous motion.' }}
+      </div>
     </div>
 
   </div>

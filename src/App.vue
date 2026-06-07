@@ -435,7 +435,7 @@ const innerCardBgClass = computed(() => {
           <div>
             <div class="flex items-center gap-2">
               <h1 class="font-display font-extrabold text-sm sm:text-base tracking-tight text-white logo-glow uppercase flex items-center">
-                <span class="text-[#2ec6d6]">NEXUS</span>&nbsp;
+                <span class="text-[#2ec6d6]">Hyperleap</span>&nbsp;
                 <span class="text-slate-300">SCARA</span>
               </h1>
             </div>
@@ -452,13 +452,6 @@ const innerCardBgClass = computed(() => {
           <span class="text-slate-500">BACKEND: <span class="text-amber-400 font-bold">{{ backendAddress || (typeof window !== 'undefined' && window.location ? window.location.host : 'localhost:3000') }}</span></span>
           <span class="text-slate-600">|</span>
           <span class="text-slate-500">INIT: <span :class="initialized ? 'text-[#2ec6d6]' : 'text-amber-500'">{{ initialized ? "OK" : "NULL" }}</span></span>
-          <button 
-            id="header_disconnect_btn"
-            @click="handleDisconnect"
-            class="ml-1 px-1.5 py-0.5 bg-rose-950/45 text-rose-400 border border-rose-800/40 hover:bg-rose-900/60 rounded text-[9px] cursor-pointer transition-all active:scale-95"
-          >
-            {{ language === 'zh' ? '断开并重配' : 'Disconnect' }}
-          </button>
         </div>
 
         <!-- Language and Actions Panel -->
@@ -525,9 +518,6 @@ const innerCardBgClass = computed(() => {
                   {{ language === 'zh' ? '系统状态总览' : 'System Status Overview' }}
                 </h3>
               </div>
-              <span class="text-[9px] font-mono text-[#2ec6d6] bg-[#2ec6d6]/10 px-2 py-0.5 rounded border border-[#2ec6d6]/20 font-bold uppercase tracking-wider">
-                HUD TELEMETRY
-              </span>
             </div>
 
             <div class="space-y-3.5 text-xs font-sans">
@@ -726,14 +716,6 @@ const innerCardBgClass = computed(() => {
       :language="language"
       @close="showDocs = false"
     />
-
-    <!-- Industrial Footer Branding -->
-    <footer class="mt-auto py-4 border-t text-center font-mono text-[9px] hover:text-white text-slate-500 transition-colors bg-[#070b12] border-slate-800/40">
-      <div class="max-w-[1400px] mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-        <span>&copy; 2026 NEXUS INDUSTRIAL SYSTEM TECHNOLOGY INC.</span>
-        <span class="text-[#2ec6d6]">SYS_PORT: 3000 | CORE_WS: VALIDATED</span>
-      </div>
-    </footer>
 
   </div>
 </template>

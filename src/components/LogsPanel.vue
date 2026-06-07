@@ -82,9 +82,6 @@ const formatSize = (bytes) => {
           {{ t.logsTitle }}
         </span>
       </div>
-      <div class="font-mono text-[10px] text-slate-500">
-        LOG RETRIEVAL ENGINE v2
-      </div>
     </div>
 
     <!-- Select Options types checkboxes -->

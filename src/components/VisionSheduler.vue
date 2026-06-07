@@ -143,13 +143,10 @@ const handleTeachPlace = async (index) => {
           <Hammer :size="16" />
           <span>{{ t.pointsTitle }}</span>
         </h4>
-        <span class="text-[10px] font-mono text-slate-400 bg-slate-950/40 px-2 py-0.5 rounded">
-          POSE SYNCED
-        </span>
       </div>
 
       <p class="text-[11px] text-slate-400 mb-4 font-mono leading-relaxed bg-slate-950/20 p-2 rounded border border-white/5">
-        👉 {{ props.language === 'zh' ? "示教当前位姿可以快速记录物理关节与坐标，作为抓取放置参考位置点。请先通过 Jog 移动到位，再行一键设置示教点。" : "Teaching is completed by jogging arm coordinates to target physical points on sorting desktop first, then click save." }}
+        {{ props.language === 'zh' ? "示教当前位姿可以快速记录物理关节与坐标，作为抓取放置参考位置点。请先通过 Jog 移动到位，再行一键设置示教点。" : "Teaching is completed by jogging arm coordinates to target physical points on sorting desktop first, then click save." }}
       </p>
 
       <!-- Notifications HUD -->

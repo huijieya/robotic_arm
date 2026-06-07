@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Custom animation for conveyor belt */
+@keyframes conveyor-slide {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(40px);
+  }
+}
+
+.conveyor-animation {
+  background-image: repeating-linear-gradient(
+    90deg,
+    #374151,
+    #374151 10px,
+    #1f2937 10px,
+    #1f2937 20px
+  );
+  animation: conveyor-slide 1s linear infinite;
+}
+
+/* Custom glow effect */
+.logo-glow {
+  text-shadow: 0 0 10px rgba(46, 198, 214, 0.4);
+}
+
+.box-glow {
+  box-shadow: 0 0 15px rgba(46, 198, 214, 0.25);
+}
+
+/* Hide scrollbars but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+

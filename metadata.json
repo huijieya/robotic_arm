@@ -1,0 +1,6 @@
+{
+  "name": "Robotic Arm Controller",
+  "description": "High-fidelity industrial configuration and control panel for single robotic arms featuring real-time calibration, multi-language localization, manual jog, visual sorting, point teaching, and dark/light themes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

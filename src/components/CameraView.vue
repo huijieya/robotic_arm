@@ -77,15 +77,6 @@ const handleSaveRoi = () => {
           {{ t.cameraFeed }}
         </span>
       </div>
-      <div class="flex items-center gap-2 font-mono text-[10px]">
-        <span v-if="props.connected" class="flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-          <ShieldCheck :size="11" />
-          LIVE
-        </span>
-        <span v-else class="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-500">
-          OFFLINE
-        </span>
-      </div>
     </div>
 
     <!-- Screen Frame -->

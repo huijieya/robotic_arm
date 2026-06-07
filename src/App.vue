@@ -432,19 +432,12 @@ const innerCardBgClass = computed(() => {
         
         <!-- Logo Brand Area -->
         <div class="flex items-center gap-3">
-          <div class="relative flex items-center justify-center w-9 h-9 rounded-lg bg-cyan-950/40 border border-cyan-400 text-[#2ec6d6] overflow-hidden shadow-inner">
-            <span class="font-display font-black text-sm tracking-wider">Ω</span>
-            <div class="absolute inset-0 bg-[#2ec6d6] opacity-10 animate-pulse" />
-          </div>
           <div>
             <div class="flex items-center gap-2">
               <h1 class="font-display font-extrabold text-sm sm:text-base tracking-tight text-white logo-glow uppercase flex items-center">
                 <span class="text-[#2ec6d6]">NEXUS</span>&nbsp;
                 <span class="text-slate-300">SCARA</span>
               </h1>
-              <span class="text-[9px] font-mono font-bold bg-[#2ec6d6]/10 text-[#2ec6d6] px-1 py-0.2 rounded border border-[#2ec6d6]/20">
-                SINGLE ARM
-              </span>
             </div>
             <p class="text-[10px] text-slate-500 font-mono hidden sm:block">
               {{ t.subtitle }}
@@ -666,17 +659,11 @@ const innerCardBgClass = computed(() => {
           <X :size="16" />
         </button>
 
-        <div class="mx-auto w-12 h-12 rounded-full bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-center text-[#2ec6d6]">
-          <Settings class="animate-spin" :size="24" />
-        </div>
 
         <div class="space-y-1">
           <h3 class="font-display font-extrabold text-lg text-white">
-            {{ t.title }}
+            {{ t.title }} - {{ t.ipDoc }}
           </h3>
-          <p class="text-xs text-slate-400">
-            {{ language === 'zh' ? '请填写网卡连接参数以启动 NEXUS 控制网关' : 'Configure control endpoints and start NEXUS operations gateway' }}
-          </p>
         </div>
 
         <div class="space-y-4 pt-2 text-left">
@@ -729,11 +716,6 @@ const innerCardBgClass = computed(() => {
         >
           {{ language === 'zh' ? '直接进入系统主界面' : 'Enter Dashboard Directly' }}
         </button>
-
-        <div class="pt-2 text-[10px] text-slate-500 font-mono uppercase tracking-wider text-center flex justify-center gap-1.5 items-center">
-          <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-          <span>NEXUS CONTROLLER STATUS: {{ connected ? 'CONNECTED' : 'OFFLINE' }}</span>
-        </div>
 
       </div>
     </div>

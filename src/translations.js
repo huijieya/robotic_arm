@@ -1,11 +1,12 @@
 export const translations = {
   zh: {
-    title: "单机械臂分拣系统浏览器配置界面",
+    title: "SCARA机械臂",
     subtitle: "高精度工业控制与极致极简主义设计",
     apiDoc: "接口文档",
+    ipDoc: "网关配置",
     ipAddress: "控制器 IP 地址",
-    backendAddress: "后端业务网关 IP / 主机地址",
-    backendAddressPlaceholder: "如 192.168.132.154:3000 (留空则默认当前网页地址)",
+    backendAddress: "后端业务网关 IP",
+    backendAddressPlaceholder: "如 192.168.132.154:3000",
     armIpAddress: "机械臂控制器 IP",
     connectBtn: "连接设备",
     connected: "已连接",

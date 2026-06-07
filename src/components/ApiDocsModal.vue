@@ -231,9 +231,6 @@ const handleSelectEndpoint = (index) => {
             <h3 class="font-display font-bold text-lg text-white">
               {{ t.title }} - {{ t.apiDoc }}
             </h3>
-            <p class="text-xs text-cyan-400/70 font-mono">
-              API Version: 3.0 Standardized | Host: <span class="text-amber-400 font-bold">{{ backendAddress || (typeof window !== 'undefined' && window.location ? window.location.host : 'localhost:3000') }}</span>
-            </p>
           </div>
         </div>
         <button

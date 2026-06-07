@@ -7,7 +7,7 @@ import ArmVisualizer from "./components/ArmVisualizer.vue";
 import ControlDashboard from "./components/ControlDashboard.vue";
 import VisionSheduler from "./components/VisionSheduler.vue";
 import LogsPanel from "./components/LogsPanel.vue";
-import { Sun, Moon, Settings, FileText } from "lucide-vue-next";
+import { Sun, Moon, Settings, FileText, X } from "lucide-vue-next";
 import { Controller, Vision, updateApiBaseUrl } from "./api/index";
 
 const language = ref("zh");
@@ -17,7 +17,8 @@ const showDocs = ref(false);
 // Connection & status states
 const connected = ref(false);
 const ip = ref("192.168.1.220");
-const backendAddress = ref(localStorage.getItem("NEXUS_BACKEND_ADDRESS") || "");
+const backendAddress = ref((typeof window !== "undefined" && typeof localStorage !== "undefined") ? (localStorage.getItem("NEXUS_BACKEND_ADDRESS") || "") : "");
+const showGatewayModal = ref(true);
 
 const getApiUrl = (path) => {
   if (!backendAddress.value) return path;
@@ -25,21 +26,34 @@ const getApiUrl = (path) => {
   if (host.startsWith("http://")) host = host.replace("http://", "");
   if (host.startsWith("https://")) host = host.replace("https://", "");
   if (!host.includes(":")) host = `${host}:3000`;
-  const protocol = window.location.protocol;
+  const protocol = (typeof window !== "undefined" && window.location) ? window.location.protocol : "http:";
   return `${protocol}//${host}${path}`;
 };
 
 const getWsUrl = () => {
+  const isBrowser = typeof window !== "undefined" && window.location;
   if (!backendAddress.value) {
-    const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
-    return `${wsProto}//${window.location.host}`;
+    const wsProto = isBrowser && window.location.protocol === "https:" ? "wss:" : "ws:";
+    const host = isBrowser ? window.location.host : "localhost:3000";
+    return `${wsProto}//${host}`;
   }
   let host = backendAddress.value.trim();
   if (host.startsWith("http://")) host = host.replace("http://", "");
   if (host.startsWith("https://")) host = host.replace("https://", "");
-  if (!host.includes(":")) host = `${host}:3000`;
-  const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${wsProto}//${host}`;
+  
+  let wsHost = host;
+  if (host.includes(":")) {
+    const parts = host.split(":");
+    const ipPart = parts[0];
+    const portPart = parseInt(parts[1], 10);
+    if (!isNaN(portPart)) {
+      wsHost = `${ipPart}:${portPart + 1}`;
+    }
+  } else {
+    wsHost = `${host}:3001`;
+  }
+  const wsProto = isBrowser && window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${wsProto}//${wsHost}`;
 };
 
 const initialized = ref(false);
@@ -83,7 +97,6 @@ const wsBinaryBlob = ref(null);
 // WS instance reference
 let socket = null;
 let reconnectTimeout = null;
-let syncInterval = null;
 
 const t = computed(() => translations[language.value]);
 
@@ -110,14 +123,22 @@ const linkTelemetryStream = () => {
     console.log("Industrial telemetry stream open and verified.");
   };
 
-  socket.onmessage = (event) => {
+  socket.onmessage = async (event) => {
     if (event.data instanceof Blob) {
       // Binary frame representing camera stream update
       wsBinaryBlob.value = event.data;
     } else {
       // Text frame representing system JSON telemetry status
+      let textData = event.data;
+      if (typeof textData !== "string") {
+        try {
+          textData = await textData.text();
+        } catch (e) {
+          return;
+        }
+      }
       try {
-        const payload = JSON.parse(event.data);
+        const payload = JSON.parse(textData);
         if (payload.type === "sys_status" && payload.data) {
           const d = payload.data;
           robotStatus.value = d.robot_status;
@@ -157,7 +178,7 @@ const linkTelemetryStream = () => {
   };
 };
 
-// Periodic poll of connection status & vision module running state to make sure frontend is perfectly aligned
+// Initial sync of connection status & vision module running state to make sure frontend has initial states
 const syncStatus = async () => {
   try {
     const resPose = await Controller.getRealtimePose();
@@ -188,13 +209,11 @@ watch(backendAddress, () => {
 onMounted(() => {
   linkTelemetryStream();
   syncStatus();
-  syncInterval = setInterval(syncStatus, 2500);
 });
 
 onUnmounted(() => {
   if (socket) socket.close();
   if (reconnectTimeout) clearTimeout(reconnectTimeout);
-  if (syncInterval) clearInterval(syncInterval);
 });
 
 // REST API Actions
@@ -204,12 +223,18 @@ const handleConnect = async (targetIp) => {
     if (res.data && res.data.success) {
       connected.value = true;
       ip.value = targetIp;
+      showGatewayModal.value = false;
       return true;
     }
   } catch (e) {
     console.error(e);
   }
   return false;
+};
+
+const handleDisconnect = () => {
+  connected.value = false;
+  showGatewayModal.value = true;
 };
 
 const handleInitialize = async () => {
@@ -433,14 +458,14 @@ const innerCardBgClass = computed(() => {
         <div v-if="connected" class="hidden lg:flex items-center gap-3.5 font-mono text-[10px] bg-slate-950/40 px-3 py-1.5 rounded-lg border border-slate-800/30">
           <span class="text-slate-500">ARM: <span class="text-[#2ec6d6] font-bold">{{ ip || "192.168.1.220" }}</span></span>
           <span class="text-slate-600">|</span>
-          <span class="text-slate-500">BACKEND: <span class="text-amber-400 font-bold">{{ backendAddress || window.location.host }}</span></span>
+          <span class="text-slate-500">BACKEND: <span class="text-amber-400 font-bold">{{ backendAddress || (typeof window !== 'undefined' && window.location ? window.location.host : 'localhost:3000') }}</span></span>
           <span class="text-slate-600">|</span>
           <span class="text-slate-500">INIT: <span :class="initialized ? 'text-[#2ec6d6]' : 'text-amber-500'">{{ initialized ? "OK" : "NULL" }}</span></span>
           <span class="text-slate-600">|</span>
           <span class="text-slate-500">POSE: <span class="text-[#2ec6d6]">X:{{ pose.x.toFixed(1) }} Y:{{ pose.y.toFixed(1) }} Z:{{ pose.z.toFixed(1) }}</span></span>
           <button 
             id="header_disconnect_btn"
-            @click="connected = false"
+            @click="handleDisconnect"
             class="ml-1 px-1.5 py-0.5 bg-rose-950/45 text-rose-400 border border-rose-800/40 hover:bg-rose-900/60 rounded text-[9px] cursor-pointer transition-all active:scale-95"
           >
             {{ language === 'zh' ? '断开并重配' : 'Disconnect' }}
@@ -450,6 +475,19 @@ const innerCardBgClass = computed(() => {
         <!-- Language and Actions Panel -->
         <div class="flex items-center gap-2.5">
           
+          <!-- Gateway Config Button -->
+          <button
+            id="header_config_gateway_btn"
+            @click="showGatewayModal = true"
+            class="p-2 rounded-lg border text-slate-400 hover:text-white transition-all cursor-pointer border-slate-700/80 hover:border-cyan-400/40 bg-slate-900/30"
+            :title="language === 'zh' ? '网关设置' : 'Gateway Config'"
+          >
+            <div class="flex items-center gap-1.5 px-0.5 font-mono text-[11px] font-semibold text-cyan-300">
+              <Settings :size="15" />
+              <span class="hidden md:inline">{{ language === 'zh' ? '网关设置' : 'Gateway' }}</span>
+            </div>
+          </button>
+
           <!-- 1. Api Document Button -->
           <button
             id="view_api_docs_btn"
@@ -495,7 +533,7 @@ const innerCardBgClass = computed(() => {
     <!-- Main Container Area -->
     <main class="flex-1 max-w-[1400px] mx-auto w-full px-4 sm:px-6 py-6 space-y-6">
       
-      <div v-if="connected" class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         
         <!-- LEFT HALF COLUMN: TELEMETRY AND LIVESTEP ANIMATOR -->
         <div class="xl:col-span-5 space-y-6">
@@ -571,74 +609,93 @@ const innerCardBgClass = computed(() => {
 
       </div>
 
-      <!-- Offline Connection Gateway Setup Card -->
-      <div v-else class="max-w-md mx-auto my-12 animate-in fade-in zoom-in-95 duration-300">
-        <div :class="['p-6 rounded-2xl border space-y-5 text-center', innerCardBgClass, 'box-glow']">
-          
-          <div class="mx-auto w-12 h-12 rounded-full bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-center text-[#2ec6d6]">
-            <Settings class="animate-spin" :size="24" />
-          </div>
-
-          <div class="space-y-1">
-            <h3 :class="['font-display font-extrabold text-lg', isDark ? 'text-white' : 'text-zinc-800']">
-              {{ t.title }}
-            </h3>
-            <p class="text-xs text-slate-400">
-              {{ language === 'zh' ? '请填写网卡连接参数以启动 NEXUS 控制网关' : 'Configure control endpoints and start NEXUS operations gateway' }}
-            </p>
-          </div>
-
-          <div class="space-y-4 pt-2 text-left">
-            <!-- 1. Robotic Arm IP -->
-            <div class="space-y-1.5">
-              <label class="text-[10px] uppercase font-bold text-slate-500 tracking-wider font-mono block">
-                {{ t.armIpAddress }}
-              </label>
-              <input
-                id="gateway_ip_input"
-                type="text"
-                v-model="ip"
-                :class="['w-full px-4 py-2 font-mono text-sm rounded-xl border outline-none text-center', isDark ? 'bg-slate-950 border-slate-800 text-[#2ec6d6] focus:border-cyan-400' : 'bg-zinc-50 border-zinc-200 text-zinc-800 focus:border-[#2ec6d6]']"
-                placeholder="192.168.1.220"
-              />
-            </div>
-
-            <!-- 2. Backend Service Host IP -->
-            <div class="space-y-1.5">
-              <label class="text-[10px] uppercase font-bold text-slate-500 tracking-wider font-mono block">
-                {{ t.backendAddress }}
-              </label>
-              <input
-                id="backend_host_ip_input"
-                type="text"
-                :value="backendAddress"
-                @input="e => updateBackendAddress(e.target.value)"
-                :class="['w-full px-4 py-2 font-mono text-sm rounded-xl border outline-none text-center', isDark ? 'bg-slate-950 border-slate-800 text-[#ccc] focus:border-cyan-400' : 'bg-zinc-50 border-zinc-200 text-zinc-800 focus:border-[#2ec6d6]']"
-                :placeholder="t.backendAddressPlaceholder"
-              />
-              <span class="text-[9px] text-slate-400 font-mono block leading-normal text-center">
-                {{ language === 'zh' ? '💡 真正提供后端接口的业务服务主机 IP 地址(留空则默认当前网页地址)' : '💡 Host executing backend control proxy (Leave empty for current host)' }}
-              </span>
-            </div>
-          </div>
-
-          <button
-            id="connect_gateway_btn"
-            @click="handleConnect(ip || '192.168.1.220')"
-            class="w-full py-3 bg-[#2ec6d6] text-cyan-950 font-display font-bold rounded-xl hover:bg-[#2ec6d6]/80 active:scale-95 transition-all text-sm cursor-pointer shadow-md mt-2"
-          >
-            {{ t.connectBtn }}
-          </button>
-
-          <div class="pt-2 text-[10px] text-slate-500 font-mono uppercase tracking-wider text-center flex justify-center gap-1.5 items-center">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-            <span>NEXUS CONTROLLER OFFLINE</span>
-          </div>
-
-        </div>
-      </div>
-
     </main>
+
+    <!-- Offline Connection Gateway Setup Modal Overlays -->
+    <div v-if="showGatewayModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div :class="['w-full max-w-md p-6 rounded-2xl border space-y-5 text-center relative animate-in fade-in zoom-in-95 duration-200 shadow-2xl', innerCardBgClass, 'box-glow']">
+        
+        <!-- Close Button -->
+        <button
+          id="close_gateway_modal_btn"
+          @click="showGatewayModal = false"
+          class="absolute top-4 right-4 p-1 rounded-lg border border-slate-700/80 hover:border-cyan-400 text-slate-400 hover:text-white transition-colors cursor-pointer"
+          title="关闭窗口并查看界面"
+        >
+          <X :size="16" />
+        </button>
+
+        <div class="mx-auto w-12 h-12 rounded-full bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-center text-[#2ec6d6]">
+          <Settings class="animate-spin" :size="24" />
+        </div>
+
+        <div class="space-y-1">
+          <h3 :class="['font-display font-extrabold text-lg', isDark ? 'text-white' : 'text-zinc-800']">
+            {{ t.title }}
+          </h3>
+          <p class="text-xs text-slate-400">
+            {{ language === 'zh' ? '请填写网卡连接参数以启动 NEXUS 控制网关' : 'Configure control endpoints and start NEXUS operations gateway' }}
+          </p>
+        </div>
+
+        <div class="space-y-4 pt-2 text-left">
+          <!-- 1. Robotic Arm IP -->
+          <div class="space-y-1.5">
+            <label class="text-[10px] uppercase font-bold text-slate-500 tracking-wider font-mono block">
+              {{ t.armIpAddress }}
+            </label>
+            <input
+              id="gateway_ip_input"
+              type="text"
+              v-model="ip"
+              :class="['w-full px-4 py-2 font-mono text-sm rounded-xl border outline-none text-center', isDark ? 'bg-slate-950 border-slate-800 text-[#2ec6d6] focus:border-cyan-400' : 'bg-zinc-50 border-zinc-200 text-zinc-800 focus:border-[#2ec6d6]']"
+              placeholder="192.168.1.220"
+            />
+          </div>
+
+          <!-- 2. Backend Service Host IP -->
+          <div class="space-y-1.5">
+            <label class="text-[10px] uppercase font-bold text-slate-500 tracking-wider font-mono block">
+              {{ t.backendAddress }}
+            </label>
+            <input
+              id="backend_host_ip_input"
+              type="text"
+              :value="backendAddress"
+              @input="e => updateBackendAddress(e.target.value)"
+              :class="['w-full px-4 py-2 font-mono text-sm rounded-xl border outline-none text-center', isDark ? 'bg-slate-950 border-slate-800 text-[#ccc] focus:border-cyan-400' : 'bg-zinc-50 border-zinc-200 text-zinc-800 focus:border-[#2ec6d6]']"
+              :placeholder="t.backendAddressPlaceholder"
+            />
+            <span class="text-[9px] text-slate-400 font-mono block leading-normal text-center">
+              {{ language === 'zh' ? '💡 真正提供后端接口的业务服务主机 IP 地址(留空则默认当前网页地址)' : '💡 Host executing backend control proxy (Leave empty for current host)' }}
+            </span>
+          </div>
+        </div>
+
+        <button
+          id="connect_gateway_btn"
+          @click="handleConnect(ip || '192.168.1.220')"
+          class="w-full py-3 bg-[#2ec6d6] text-cyan-950 font-display font-bold rounded-xl hover:bg-[#2ec6d6]/80 active:scale-95 transition-all text-sm cursor-pointer shadow-md mt-2"
+        >
+          {{ t.connectBtn }}
+        </button>
+
+        <!-- Dismiss Skip Option -->
+        <button
+          id="dismiss_gateway_modal_btn"
+          @click="showGatewayModal = false"
+          class="w-full py-2 bg-transparent border border-slate-700/80 hover:border-cyan-400 text-slate-400 hover:text-white font-medium rounded-xl hover:bg-slate-800 transition-all text-xs cursor-pointer"
+        >
+          {{ language === 'zh' ? '直接进入系统主界面' : 'Enter Dashboard Directly' }}
+        </button>
+
+        <div class="pt-2 text-[10px] text-slate-500 font-mono uppercase tracking-wider text-center flex justify-center gap-1.5 items-center">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+          <span>NEXUS CONTROLLER STATUS: {{ connected ? 'CONNECTED' : 'OFFLINE' }}</span>
+        </div>
+
+      </div>
+    </div>
 
     <!-- Floating API Docs Modal -->
     <ApiDocsModal

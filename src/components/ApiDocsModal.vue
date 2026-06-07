@@ -160,11 +160,12 @@ const ENDPOINTS = [
 
 const copiedId = ref(null);
 const t = translations[props.language];
-const backendAddress = localStorage.getItem("NEXUS_BACKEND_ADDRESS") || "";
+const backendAddress = (typeof window !== "undefined" && typeof localStorage !== "undefined") ? (localStorage.getItem("NEXUS_BACKEND_ADDRESS") || "") : "";
 
 const getFullUrl = (path) => {
   if (!backendAddress) {
-    return `http://${window.location.host}${path}`;
+    const host = (typeof window !== "undefined" && window.location) ? window.location.host : "localhost:3000";
+    return `http://${host}${path}`;
   }
   let host = backendAddress.trim();
   if (host.startsWith("http://")) host = host.replace("http://", "");
@@ -197,7 +198,7 @@ const handleCopy = (text, path) => {
               {{ t.title }} - {{ t.apiDoc }}
             </h3>
             <p class="text-xs text-cyan-400/70 font-mono">
-              API Version: 3.0 Standardized | Host: <span class="text-amber-400 font-bold">{{ backendAddress || window.location.host }}</span>
+              API Version: 3.0 Standardized | Host: <span class="text-amber-400 font-bold">{{ backendAddress || (typeof window !== 'undefined' && window.location ? window.location.host : 'localhost:3000') }}</span>
             </p>
           </div>
         </div>

@@ -52,35 +52,7 @@ watch(() => props.wsBinaryBlob, (newBlob) => {
   }
 });
 
-// Fallback interval
-let interval = null;
-
-watch(() => [props.connected, props.wsBinaryBlob], ([isConnected, blobVal]) => {
-  if (interval) {
-    clearInterval(interval);
-    interval = null;
-  }
-  if (isConnected && !blobVal) {
-    interval = setInterval(async () => {
-      try {
-        const res = await fetch("/camera_stream");
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && json.data) {
-            cameraImage.value = `data:image/jpeg;base64,${json.data}`;
-            frameId.value = (frameId.value + 1) % 99999;
-            latency.value = parseFloat((10 + Math.random() * 8).toFixed(1));
-          }
-        }
-      } catch (err) {
-        // Fallback
-      }
-    }, 1500);
-  }
-}, { immediate: true });
-
 onUnmounted(() => {
-  if (interval) clearInterval(interval);
   if (imageRevokeUrl.value) {
     URL.revokeObjectURL(imageRevokeUrl.value);
   }

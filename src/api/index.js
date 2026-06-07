@@ -6,11 +6,13 @@ const getBaseUrl = (backendAddr) => {
   if (host.startsWith("http://")) host = host.replace("http://", "");
   if (host.startsWith("https://")) host = host.replace("https://", "");
   if (!host.includes(":")) host = `${host}:3000`;
-  const protocol = window.location.protocol;
+  const protocol = (typeof window !== "undefined" && window.location) ? window.location.protocol : "http:";
   return `${protocol}//${host}`;
 };
 
-const initialHost = localStorage.getItem("NEXUS_BACKEND_ADDRESS") || "";
+const initialHost = (typeof window !== "undefined" && typeof localStorage !== "undefined")
+  ? localStorage.getItem("NEXUS_BACKEND_ADDRESS") || ""
+  : "";
 
 export const Request = Axios.create({
   baseURL: getBaseUrl(initialHost),

@@ -1,25 +1,17 @@
-<script setup lang="ts">
+<script setup>
 import { ref } from "vue";
-import { Language } from "../types";
 import { translations } from "../translations";
 import { X, Copy, Check, Terminal } from "lucide-vue-next";
 
-interface ApiDocsModalProps {
-  language: Language;
-}
-
-const props = defineProps<ApiDocsModalProps>();
+const props = defineProps({
+  language: {
+    type: String,
+    default: "zh"
+  }
+});
 const emit = defineEmits(["close"]);
 
-interface ApiEndpoint {
-  method: "GET" | "POST";
-  path: string;
-  desc: { zh: string; en: string; ja: string; ko: string };
-  params: string;
-  response: string;
-}
-
-const ENDPOINTS: ApiEndpoint[] = [
+const ENDPOINTS = [
   {
     method: "GET",
     path: "/connect?ip=192.168.1.220",
@@ -166,11 +158,11 @@ const ENDPOINTS: ApiEndpoint[] = [
   }
 ];
 
-const copiedId = ref<string | null>(null);
+const copiedId = ref(null);
 const t = translations[props.language];
 const backendAddress = localStorage.getItem("NEXUS_BACKEND_ADDRESS") || "";
 
-const getFullUrl = (path: string) => {
+const getFullUrl = (path) => {
   if (!backendAddress) {
     return `http://${window.location.host}${path}`;
   }
@@ -181,7 +173,7 @@ const getFullUrl = (path: string) => {
   return `http://${host}${path}`;
 };
 
-const handleCopy = (text: string, path: string) => {
+const handleCopy = (text, path) => {
   navigator.clipboard.writeText(text);
   copiedId.value = path;
   setTimeout(() => {

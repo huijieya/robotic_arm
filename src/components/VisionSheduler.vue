@@ -1,38 +1,31 @@
-<script setup lang="ts">
+<script setup>
 import { ref, watch, computed } from "vue";
-import { Language } from "../types";
 import { translations } from "../translations";
 import { Eye, Hammer, Play, Square, MapPin } from "lucide-vue-next";
 
-interface VisionShedulerProps {
-  language: Language;
-  connected: boolean;
-  visionRunning: boolean;
-  pose: { x: number; y: number; z: number; u: number };
-  isDark: boolean;
-  getApiUrl?: (path: string) => string;
-}
+const props = defineProps({
+  language: { type: String, default: "zh" },
+  connected: { type: Boolean, default: false },
+  visionRunning: { type: Boolean, default: false },
+  pose: { type: Object, default: () => ({ x: 0, y: 0, z: 0, u: 0 }) },
+  isDark: { type: Boolean, default: true },
+  getApiUrl: { type: Function, default: null }
+});
 
-const props = defineProps<VisionShedulerProps>();
 const emit = defineEmits(["start-vision", "stop-vision"]);
 
 const t = computed(() => translations[props.language]);
 
-const getUrl = (path: string) => {
+const getUrl = (path) => {
   return props.getApiUrl ? props.getApiUrl(path) : path;
 };
 
-interface PointsState {
-  pick: boolean;
-  place: boolean[];
-}
-
-const points = ref<PointsState>({
+const points = ref({
   pick: true,
   place: [true, false, true]
 });
 
-const notif = ref<string | null>(null);
+const notif = ref(null);
 
 // Poll current teach points state from the server
 const fetchPoints = async () => {
@@ -82,7 +75,7 @@ const handleTeachPick = async () => {
   }
 };
 
-const handleTeachPlace = async (index: number) => {
+const handleTeachPlace = async (index) => {
   if (!props.connected) return;
   try {
     const res = await fetch(getUrl("/teach_point"), {

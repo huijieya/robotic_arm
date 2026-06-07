@@ -1,19 +1,17 @@
-<script setup lang="ts">
+<script setup>
 import { ref, watch, computed, onUnmounted } from "vue";
-import { Language } from "../types";
 import { translations } from "../translations";
 import { Eye, Focus, RefreshCw, AlertTriangle, ShieldCheck } from "lucide-vue-next";
 
-interface CameraViewProps {
-  language: Language;
-  connected: boolean;
-  isDark: boolean;
-  roi: { valid: boolean; x: number; y: number; w: number; h: number };
-  teachRoiActive: boolean;
-  wsBinaryBlob: Blob | null;
-}
+const props = defineProps({
+  language: { type: String, default: "zh" },
+  connected: { type: Boolean, default: false },
+  isDark: { type: Boolean, default: true },
+  roi: { type: Object, default: () => ({ valid: true, x: 100, y: 120, w: 300, h: 240 }) },
+  teachRoiActive: { type: Boolean, default: false },
+  wsBinaryBlob: { type: null, default: null }
+});
 
-const props = defineProps<CameraViewProps>();
 const emit = defineEmits(["teach-roi-click", "teach-roi-save"]);
 
 const t = computed(() => translations[props.language]);
@@ -55,7 +53,7 @@ watch(() => props.wsBinaryBlob, (newBlob) => {
 });
 
 // Fallback interval
-let interval: any = null;
+let interval = null;
 
 watch(() => [props.connected, props.wsBinaryBlob], ([isConnected, blobVal]) => {
   if (interval) {
@@ -219,9 +217,9 @@ const handleSaveRoi = () => {
           {{ t.exitRoiBtn }}
         </button>
         <button
+          @click="emit('teach-roi-click')"
           v-else
           id="enter_roi_mode_btn"
-          @click="emit('teach-roi-click')"
           :disabled="!props.connected"
           :class="['px-3.5 py-1.5 text-xs font-display font-medium border rounded-lg transition-all cursor-pointer', props.connected ? 'border-[#2ec6d6] text-[#2ec6d6] hover:bg-[#2ec6d6]/10 active:scale-95' : 'border-slate-800 text-slate-500 cursor-not-allowed']"
         >

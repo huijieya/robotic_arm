@@ -1,6 +1,5 @@
-<script setup lang="ts">
+<script setup>
 import { ref, onMounted, onUnmounted, watch, computed } from "vue";
-import { Language, CalibrationData } from "./types";
 import { translations } from "./translations";
 import ApiDocsModal from "./components/ApiDocsModal.vue";
 import CameraView from "./components/CameraView.vue";
@@ -8,18 +7,18 @@ import ArmVisualizer from "./components/ArmVisualizer.vue";
 import ControlDashboard from "./components/ControlDashboard.vue";
 import VisionSheduler from "./components/VisionSheduler.vue";
 import LogsPanel from "./components/LogsPanel.vue";
-import { Sun, Moon, Laptop, Settings, Eye, FileText } from "lucide-vue-next";
+import { Sun, Moon, Settings, FileText } from "lucide-vue-next";
 
-const language = ref<Language>("zh");
-const isDark = ref<boolean>(true);
-const showDocs = ref<boolean>(false);
+const language = ref("zh");
+const isDark = ref(true);
+const showDocs = ref(false);
 
 // Connection & status states
-const connected = ref<boolean>(false);
-const ip = ref<string>("192.168.1.220");
-const backendAddress = ref<string>(localStorage.getItem("NEXUS_BACKEND_ADDRESS") || "");
+const connected = ref(false);
+const ip = ref("192.168.1.220");
+const backendAddress = ref(localStorage.getItem("NEXUS_BACKEND_ADDRESS") || "");
 
-const getApiUrl = (path: string) => {
+const getApiUrl = (path) => {
   if (!backendAddress.value) return path;
   let host = backendAddress.value.trim();
   if (host.startsWith("http://")) host = host.replace("http://", "");
@@ -42,22 +41,22 @@ const getWsUrl = () => {
   return `${wsProto}//${host}`;
 };
 
-const initialized = ref<boolean>(false);
-const robotStatus = ref<string>("制动");
-const robotStatusCode = ref<number>(2);
-const controllerState = ref<string>("不允许程序操作和jog");
-const controllerStateCode = ref<number>(3);
-const pose = ref<{ x: number; y: number; z: number; u: number }>({
+const initialized = ref(false);
+const robotStatus = ref("制动");
+const robotStatusCode = ref(2);
+const controllerState = ref("不允许程序操作和jog");
+const controllerStateCode = ref(3);
+const pose = ref({
   x: 528.61,
   y: -701.51,
   z: 0.47,
   u: -1.68
 });
-const speedRatio = ref<number>(40);
-const programStatus = ref<string>("空闲");
-const visionRunning = ref<boolean>(false);
-const teachRoiActive = ref<boolean>(false);
-const roi = ref<{ valid: boolean; x: number; y: number; w: number; h: number }>({
+const speedRatio = ref(40);
+const programStatus = ref("空闲");
+const visionRunning = ref(false);
+const teachRoiActive = ref(false);
+const roi = ref({
   valid: true,
   x: 100,
   y: 120,
@@ -66,7 +65,7 @@ const roi = ref<{ valid: boolean; x: number; y: number; w: number; h: number }>(
 });
 
 // Calibration outcomes
-const calib = ref<CalibrationData>({
+const calib = ref({
   status: "idle",
   running: false,
   progress: 0,
@@ -78,12 +77,12 @@ const calib = ref<CalibrationData>({
 });
 
 // Binary WebSocket frame stream
-const wsBinaryBlob = ref<Blob | null>(null);
+const wsBinaryBlob = ref(null);
 
 // WS instance reference
-let socket: WebSocket | null = null;
-let reconnectTimeout: any = null;
-let syncInterval: any = null;
+let socket = null;
+let reconnectTimeout = null;
+let syncInterval = null;
 
 const t = computed(() => translations[language.value]);
 
@@ -207,7 +206,7 @@ onUnmounted(() => {
 });
 
 // REST API Actions
-const handleConnect = async (targetIp: string): Promise<boolean> => {
+const handleConnect = async (targetIp) => {
   try {
     const res = await fetch(getApiUrl(`/connect?ip=${encodeURIComponent(targetIp)}`));
     if (res.ok) {
@@ -224,7 +223,7 @@ const handleConnect = async (targetIp: string): Promise<boolean> => {
   return false;
 };
 
-const handleInitialize = async (): Promise<boolean> => {
+const handleInitialize = async () => {
   try {
     const res = await fetch(getApiUrl("/init"));
     if (res.ok) {
@@ -242,7 +241,7 @@ const handleInitialize = async (): Promise<boolean> => {
   return false;
 };
 
-const handleEnable = async (): Promise<boolean> => {
+const handleEnable = async () => {
   try {
     const res = await fetch(getApiUrl("/start"));
     if (res.ok) {
@@ -259,7 +258,7 @@ const handleEnable = async (): Promise<boolean> => {
   return false;
 };
 
-const handleDisable = async (): Promise<boolean> => {
+const handleDisable = async () => {
   try {
     const res = await fetch(getApiUrl("/stop"));
     if (res.ok) {
@@ -277,7 +276,7 @@ const handleDisable = async (): Promise<boolean> => {
   return false;
 };
 
-const handleClearError = async (): Promise<boolean> => {
+const handleClearError = async () => {
   try {
     const res = await fetch(getApiUrl("/clear_error"));
     if (res.ok) {
@@ -306,7 +305,7 @@ const handleTriggerSimError = async () => {
   }
 };
 
-const handleSpeedRatioChange = async (val: number): Promise<boolean> => {
+const handleSpeedRatioChange = async (val) => {
   try {
     const res = await fetch(getApiUrl(`/speedratio?value=${val}`));
     if (res.ok) {
@@ -322,11 +321,7 @@ const handleSpeedRatioChange = async (val: number): Promise<boolean> => {
   return false;
 };
 
-const handleJog = async (
-  axis: "X" | "Y" | "Z" | "U",
-  dir: 1 | -1,
-  dist: number
-): Promise<boolean> => {
+const handleJog = async (axis, dir, dist) => {
   try {
     const res = await fetch(getApiUrl(`/jog_step?axis=${axis}&dir=${dir}&dist=${dist}`));
     if (res.ok) {
@@ -350,7 +345,7 @@ const handleJog = async (
   return false;
 };
 
-const handleTriggerCalibration = async (): Promise<boolean> => {
+const handleTriggerCalibration = async () => {
   try {
     const res = await fetch(getApiUrl("/autocalib"));
     if (res.ok) {
@@ -399,7 +394,7 @@ const handleStopSorting = async () => {
   return false;
 };
 
-const handleTeachRoiSave = async (dimensions: { x: number; y: number; w: number; h: number }) => {
+const handleTeachRoiSave = async (dimensions) => {
   try {
     const res = await fetch(getApiUrl("/set_roi"), {
       method: "POST",
@@ -434,7 +429,7 @@ const handleTeachRoiClick = async () => {
   }
 };
 
-const updateBackendAddress = (val: string) => {
+const updateBackendAddress = (val) => {
   backendAddress.value = val;
   localStorage.setItem("NEXUS_BACKEND_ADDRESS", val);
 };
@@ -526,7 +521,7 @@ const innerCardBgClass = computed(() => {
           <!-- 3. Internationalization languages Select (中英日韩) -->
           <div class="flex items-center border border-slate-700/80 rounded-lg p-0.5 bg-slate-900/30">
             <button
-              v-for="lang in (['zh', 'en', 'ja', 'ko'] as Language[])"
+              v-for="lang in ['zh', 'en', 'ja', 'ko']"
               :id="`lang_switch_${lang}`"
               :key="lang"
               @click="language = lang"
@@ -568,7 +563,7 @@ const innerCardBgClass = computed(() => {
             :visionRunning="visionRunning"
           />
 
-        </div>
+         </div>
 
         <!-- RIGHT COLUMN: CONFIGURATION CONTROLLERS -->
         <div class="xl:col-span-7 space-y-6">
@@ -661,7 +656,7 @@ const innerCardBgClass = computed(() => {
                 id="backend_host_ip_input"
                 type="text"
                 :value="backendAddress"
-                @input="e => updateBackendAddress((e.target as HTMLInputElement).value)"
+                @input="e => updateBackendAddress(e.target.value)"
                 :class="['w-full px-4 py-2 font-mono text-sm rounded-xl border outline-none text-center', isDark ? 'bg-slate-950 border-slate-800 text-[#ccc] focus:border-cyan-400' : 'bg-zinc-50 border-zinc-200 text-zinc-800 focus:border-[#2ec6d6]']"
                 :placeholder="t.backendAddressPlaceholder"
               />

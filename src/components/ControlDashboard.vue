@@ -1,25 +1,23 @@
-<script setup lang="ts">
+<script setup>
 import { ref, watch, computed } from "vue";
-import { Language, CalibrationData } from "../types";
 import { translations } from "../translations";
 import { 
   Link, Play, Square, AlertTriangle, Settings, 
   Gauge, Sparkles, Navigation2, ZapOff, CheckCircle 
 } from "lucide-vue-next";
 
-interface ControlDashboardProps {
-  language: Language;
-  connected: boolean;
-  ip: string;
-  initialized: boolean;
-  robotStatus: string;
-  robotStatusCode: number;
-  speedRatio: number;
-  calib: CalibrationData;
-  isDark: boolean;
-}
+const props = defineProps({
+  language: { type: String, default: "zh" },
+  connected: { type: Boolean, default: false },
+  ip: { type: String, default: "192.168.1.220" },
+  initialized: { type: Boolean, default: false },
+  robotStatus: { type: String, default: "制动" },
+  robotStatusCode: { type: Number, default: 2 },
+  speedRatio: { type: Number, default: 40 },
+  calib: { type: Object, default: () => ({ status: "idle", running: false, progress: 0, total: 9, message: "", errors: [], mean_error: 0.0, max_error: 0.0 }) },
+  isDark: { type: Boolean, default: true }
+});
 
-const props = defineProps<ControlDashboardProps>();
 const emit = defineEmits([
   "connect", "initialize", "enable", "disable", 
   "clear-error", "trigger-sim-error", "speed-ratio-change", 
@@ -43,9 +41,9 @@ watch(() => props.ip, (newIp) => {
 });
 
 // Jog parameters states
-const selectedAxis = ref<"X" | "Y" | "Z" | "U">("X");
-const jogDir = ref<1 | -1>(1);
-const jogDist = ref<number>(10);
+const selectedAxis = ref("X");
+const jogDir = ref(1);
+const jogDist = ref(10);
 
 const handleConnectClick = async () => {
   connecting.value = true;
@@ -55,7 +53,7 @@ const handleConnectClick = async () => {
   }, 1000);
 };
 
-const handleSpeedSliderChange = (e: any) => {
+const handleSpeedSliderChange = (e) => {
   localSpeedRatio.value = parseInt(e.target.value);
 };
 

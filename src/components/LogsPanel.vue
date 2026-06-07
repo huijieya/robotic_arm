@@ -1,30 +1,27 @@
-<script setup lang="ts">
+<script setup>
 import { ref, computed } from "vue";
-import { Language, LogList } from "../types";
 import { translations } from "../translations";
 import { Database, Download, FileText } from "lucide-vue-next";
 
-interface LogsPanelProps {
-  language: Language;
-  connected: boolean;
-  isDark: boolean;
-  getApiUrl?: (path: string) => string;
-}
-
-const props = defineProps<LogsPanelProps>();
+const props = defineProps({
+  language: { type: String, default: "zh" },
+  connected: { type: Boolean, default: false },
+  isDark: { type: Boolean, default: true },
+  getApiUrl: { type: Function, default: null }
+});
 
 const t = computed(() => translations[props.language]);
 
-const getUrl = (path: string) => {
+const getUrl = (path) => {
   return props.getApiUrl ? props.getApiUrl(path) : path;
 };
 
-const types = ref<string[]>(["ScaraControl", "VisionSorter"]);
-const queriedLogs = ref<LogList | null>(null);
+const types = ref(["ScaraControl", "VisionSorter"]);
+const queriedLogs = ref(null);
 const loading = ref(false);
 const downloading = ref(false);
 
-const handleCheckboxChange = (type: string) => {
+const handleCheckboxChange = (type) => {
   if (types.value.includes(type)) {
     types.value = types.value.filter((t) => t !== type);
   } else {
@@ -89,7 +86,7 @@ const handleDownloadLogs = async () => {
   }
 };
 
-const formatSize = (bytes: number) => {
+const formatSize = (bytes) => {
   return `${(bytes / 1024).toFixed(1)} KB`;
 };
 </script>

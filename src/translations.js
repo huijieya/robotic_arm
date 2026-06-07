@@ -1,6 +1,4 @@
-import { Language } from "./types";
-
-export const translations: Record<Language, Record<string, string>> = {
+export const translations = {
   zh: {
     title: "单机械臂分拣系统浏览器配置界面",
     subtitle: "高精度工业控制与极致极简主义设计",
@@ -140,7 +138,7 @@ export const translations: Record<Language, Record<string, string>> = {
     armJointStatus: "Robotic Arm Joints"
   },
   ja: {
-    title: "単一ロボットアーム選別ブラウザ構成パネル",
+    title: "単一ロボットアーム选別ブラウザ構成パネル",
     subtitle: "高精度産業用、ミニマリズム制御パネル",
     apiDoc: "APIドキュメント",
     ipAddress: "コントローラー IP アドレス",
@@ -156,7 +154,7 @@ export const translations: Record<Language, Record<string, string>> = {
     initBtn: "初期化実行",
     enableBtn: "有効化 (起動)",
     disableBtn: "無効化 (ブレーキ)",
-    enabled: "移動可能 (有効)",
+    enabled: "有効",
     disabled: "停止中 (ブレーキ)",
     errorState: "異常状態 (エラー)",
     clearError: "エラークリア",
@@ -181,7 +179,7 @@ export const translations: Record<Language, Record<string, string>> = {
     visionModule: "ビジョン画像選別モジュール",
     startVision: "自動選別起動",
     stopVision: "自動選別停止",
-    sortingState: "選別ステータス",
+    sortingState: "選別ステータ스",
     running: "実行中",
     idle: "停止中",
     teachRoiTitle: "ビジョン ROI 面設定ティーチ",

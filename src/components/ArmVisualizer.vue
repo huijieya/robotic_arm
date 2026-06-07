@@ -1,18 +1,15 @@
-<script setup lang="ts">
+<script setup>
 import { ref, watch, computed, onUnmounted } from "vue";
-import { Language } from "../types";
 import { translations } from "../translations";
 import { Zap, Disc } from "lucide-vue-next";
 
-interface ArmVisualizerProps {
-  language: Language;
-  pose: { x: number; y: number; z: number; u: number };
-  robotStatus: string;
-  isDark: boolean;
-  visionRunning: boolean;
-}
-
-const props = defineProps<ArmVisualizerProps>();
+const props = defineProps({
+  language: { type: String, default: "zh" },
+  pose: { type: Object, default: () => ({ x: 528.61, y: -701.51, z: 0.47, u: -1.68 }) },
+  robotStatus: { type: String, default: "制动" },
+  isDark: { type: Boolean, default: true },
+  visionRunning: { type: Boolean, default: false }
+});
 
 const cargoPos = ref(0);
 const grabbing = ref(false);
@@ -37,7 +34,7 @@ const angleTheta = computed(() => {
   return props.pose.u; // Rotation joint angle
 });
 
-let interval: any = null;
+let interval = null;
 
 watch(() => props.visionRunning, (isRunning) => {
   if (interval) {
@@ -222,19 +219,19 @@ onUnmounted(() => {
 
     <!-- Manual coordinates reading -->
     <div class="mt-3 grid grid-cols-4 gap-2 font-mono text-center">
-      <div :class="['p-2 rounded border', props.isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-zinc-100']">
+      <div :class="['p-2 rounded border', props.isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-slate-50 border-zinc-100']">
         <div class="text-[10px] text-slate-400">COORD X</div>
         <div class="text-xs font-bold text-[#2ec6d6]">{{ props.pose.x.toFixed(2) }}</div>
       </div>
-      <div :class="['p-2 rounded border', props.isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-zinc-100']">
+      <div :class="['p-2 rounded border', props.isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-slate-50 border-zinc-100']">
         <div class="text-[10px] text-slate-400">COORD Y</div>
         <div class="text-xs font-bold text-[#2ec6d6]">{{ props.pose.y.toFixed(2) }}</div>
       </div>
-      <div :class="['p-2 rounded border', props.isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-zinc-100']">
+      <div :class="['p-2 rounded border', props.isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-slate-50 border-zinc-100']">
         <div class="text-[10px] text-slate-400">COORD Z</div>
         <div class="text-xs font-bold text-[#2ec6d6]">{{ props.pose.z.toFixed(2) }}</div>
       </div>
-      <div :class="['p-2 rounded border', props.isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-zinc-100']">
+      <div :class="['p-2 rounded border', props.isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-slate-50 border-zinc-100']">
         <div class="text-[10px] text-slate-400">ANGLE U</div>
         <div class="text-xs font-bold text-[#2ec6d6]">{{ props.pose.u.toFixed(2) }}°</div>
       </div>

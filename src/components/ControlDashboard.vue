@@ -114,7 +114,7 @@ onUnmounted(() => {
     <!-- 1. Device Connections Bento Item -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
       <h4 class="font-display font-medium text-xs uppercase tracking-wider mb-3 text-slate-400 select-none">
-        <span>{{ props.language === 'zh' ? '第一步：建立通信连接' : 'Step 1: Connect Controller' }}</span>
+        <span>{{ t.step1Connect }}</span>
       </h4>
 
       <div class="flex flex-col sm:flex-row items-stretch gap-3">
@@ -142,7 +142,7 @@ onUnmounted(() => {
     <!-- 2. Arm Status & Activation Bento Item -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
       <h4 class="font-display font-medium text-xs uppercase tracking-wider mb-4 text-slate-400 select-none">
-        <span>{{ props.language === 'zh' ? '第二步与第三步：控制与使能状态' : 'Step 2 & 3: Initialization & Enable Controls' }}</span>
+        <span>{{ t.step23InitEnable }}</span>
       </h4>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -163,7 +163,7 @@ onUnmounted(() => {
 
           <!-- Arm status pill -->
           <div class="text-xs text-slate-400 font-medium">
-            {{ props.language === 'zh' ? '机械臂当前状态' : 'Mechanical Arm Status' }}:
+            {{ t.mechanicalArmStatus }}:
           </div>
           <div :class="['p-3 rounded-lg border font-mono text-center flex items-center justify-center gap-2 min-h-[50px]', props.robotStatusCode === 3 || props.robotStatusCode === 4 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : props.robotStatusCode === 1 ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 animate-pulse' : 'bg-amber-500/10 border-amber-500/30 text-amber-500']">
             <template v-if="props.robotStatusCode === 3 || props.robotStatusCode === 4">
@@ -247,9 +247,9 @@ onUnmounted(() => {
           <span>{{ t.speedRatio }}</span>
         </h4>
         <div class="flex items-center gap-2 text-[10px] font-mono select-none">
-          <span class="text-slate-400">{{ props.language === 'zh' ? '当前值:' : 'Current:' }} <span class="text-white font-bold">{{ props.speedRatio }}%</span></span>
+          <span class="text-slate-400">{{ t.currentValLabel }} <span class="text-white font-bold">{{ props.speedRatio }}%</span></span>
           <span class="text-slate-600">|</span>
-          <span class="text-slate-400">{{ props.language === 'zh' ? '调整值:' : 'Target:' }} <span class="text-[#2ec6d6] font-extrabold">{{ localSpeedRatio }}%</span></span>
+          <span class="text-slate-400">{{ t.adjustValLabel }} <span class="text-[#2ec6d6] font-extrabold">{{ localSpeedRatio }}%</span></span>
         </div>
       </div>
 
@@ -270,14 +270,14 @@ onUnmounted(() => {
           :disabled="!props.connected || localSpeedRatio === props.speedRatio || showApplyConfirm"
           class="px-3 py-1.5 text-xs font-display font-bold rounded-lg bg-[#2ec6d6] text-cyan-950 hover:bg-[#2ec6d6]/85 disabled:bg-slate-850 disabled:text-slate-600 border border-transparent disabled:border-transparent active:scale-95 transition-all cursor-pointer flex-shrink-0"
         >
-          {{ props.language === 'zh' ? '应用' : 'Apply' }}
+          {{ props.language === 'zh' ? '应用' : props.language === 'ja' ? '適用' : props.language === 'ko' ? '적용' : 'Apply' }}
         </button>
       </div>
 
       <!-- Second level confirmation prompt -->
       <div v-if="showApplyConfirm" class="mt-3 p-2.5 bg-cyan-950/25 border border-cyan-500/20 rounded-lg flex items-center justify-between text-xs font-mono animate-fadeIn">
         <span class="text-[#2ec6d6]">
-          {{ props.language === 'zh' ? `确认应用新速度 ${localSpeedRatio}% ？` : `Confirm speed change to ${localSpeedRatio}%?` }}
+          {{ t.confirmApplySpeed.replace('{speed}', localSpeedRatio) }}
         </span>
         <div class="flex items-center gap-2">
           <button
@@ -285,14 +285,14 @@ onUnmounted(() => {
             @click="confirmSpeedChange"
             class="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded text-[10px] cursor-pointer"
           >
-            {{ props.language === 'zh' ? '确定' : 'Confirm' }}
+            {{ t.confirmBtn }}
           </button>
           <button
             id="cancel_speed_btn"
             @click="cancelSpeedChange"
             class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded text-[10px] cursor-pointer"
           >
-            {{ props.language === 'zh' ? '取消' : 'Cancel' }}
+            {{ t.cancelBtn }}
           </button>
         </div>
       </div>
@@ -373,7 +373,7 @@ onUnmounted(() => {
       <div class="flex flex-wrap items-center justify-between gap-3 mb-4 text-xs font-mono select-none">
         <div class="flex items-center gap-2.5">
           <span class="text-slate-300 font-bold whitespace-nowrap">
-            {{ props.language === 'zh' ? '步长 (mm/deg):' : 'Step (mm/deg):' }}
+            {{ t.jogStepDist }}:
           </span>
           <input
             id="jog_dist_input"
@@ -385,7 +385,7 @@ onUnmounted(() => {
         <!-- Rapid click presets -->
         <div class="flex items-center gap-1.5 bg-slate-950/40 p-1 rounded-md border border-slate-850">
           <span class="text-[9px] text-slate-500 font-bold px-1 uppercase tracking-wider">
-            {{ props.language === 'zh' ? '快捷' : 'Presets' }}
+            {{ props.language === 'zh' ? '快捷' : props.language === 'ja' ? 'プリセット' : props.language === 'ko' ? '기본값' : 'Presets' }}
           </span>
           <button
             v-for="num in [1, 10, 50]"

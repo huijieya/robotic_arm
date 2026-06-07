@@ -98,6 +98,49 @@ let reconnectTimeout = null;
 
 const t = computed(() => translations[language.value]);
 
+const translatedRobotStatus = computed(() => {
+  if (robotStatusCode.value === 1 || robotStatus.value === '错误' || robotStatus.value === '急停') {
+    return t.value.errorState;
+  }
+  if (robotStatusCode.value === 4 || robotStatus.value === '运行') {
+    return t.value.running;
+  }
+  if (robotStatusCode.value === 3 || robotStatus.value === '使能') {
+    return t.value.enabled;
+  }
+  if (robotStatus.value === '制动' || robotStatus.value === 'Braked' || robotStatus.value === 'Disabled') {
+    return t.value.disabled;
+  }
+  if (robotStatus.value === '使能' || robotStatus.value === 'Enabled') return t.value.enabled;
+  if (robotStatus.value === '运行' || robotStatus.value === 'Running') return t.value.running;
+  if (robotStatus.value === '错误' || robotStatus.value === 'Error' || robotStatus.value === '急停' || robotStatus.value === 'Estop') return t.value.errorState;
+  if (robotStatus.value === '制动' || robotStatus.value === 'Braked' || robotStatus.value === 'Disabled') return t.value.disabled;
+  return robotStatus.value;
+});
+
+const translatedProgramStatus = computed(() => {
+  if (programStatus.value === '运行中' || programStatus.value === 'Running') {
+    return t.value.running;
+  }
+  if (programStatus.value === '空闲' || programStatus.value === 'Idle') {
+    return t.value.idle;
+  }
+  return programStatus.value;
+});
+
+const translatedControllerState = computed(() => {
+  if (controllerStateCode.value === 2 || controllerState.value === "允许程序操作和jog" || controllerState.value === "PROG_ALLOW_JOG (reg881 = 2)") {
+    return t.value.ctrlStateProgJog;
+  }
+  if (controllerStateCode.value === 1 || controllerState.value === "允许程序操作") {
+    return t.value.ctrlStateProg;
+  }
+  if (controllerStateCode.value === 3 || controllerState.value === "不允许程序操作和jog" || controllerState.value === "WAIT_INITIAL_HANDSHAKE") {
+    return t.value.ctrlStateNone;
+  }
+  return controllerState.value;
+});
+
 // Initialize and maintain WebSocket subscriptions
 const linkTelemetryStream = () => {
   if (socket) {
@@ -515,7 +558,7 @@ const innerCardBgClass = computed(() => {
             <div class="flex items-center justify-between border-b border-slate-800/60 pb-3">
               <div class="flex items-center">
                 <h3 class="font-display font-medium text-xs uppercase tracking-wider text-slate-400 select-none">
-                  {{ language === 'zh' ? '系统状态总览' : 'System Status Overview' }}
+                  {{ t.systemStatusOverview }}
                 </h3>
               </div>
             </div>
@@ -523,20 +566,20 @@ const innerCardBgClass = computed(() => {
             <div class="space-y-3.5 text-xs font-sans">
               <!-- 1.1 机械臂状态 -->
               <div class="flex items-center justify-between">
-                <span class="text-slate-400 font-medium">{{ language === 'zh' ? '机械臂状态：' : 'Robot State:' }}</span>
+                <span class="text-slate-400 font-medium">{{ t.robotStateLabel }}</span>
                 <span :class="[
                   'px-2.5 py-1 rounded text-xs font-black min-w-[70px] text-center shadow-xs',
-                  robotStatus === '错误' || robotStatusCode === 1 || robotStatus === '急停' ? 'bg-rose-500 text-rose-950' :
-                  robotStatus === '运行' || robotStatusCode === 4 ? 'bg-emerald-500 text-emerald-950' :
-                  robotStatus === '使能' || robotStatusCode === 3 ? 'bg-amber-500 text-amber-950' : 'bg-slate-700 text-slate-100'
+                  robotStatusCode === 1 || robotStatus === '错误' || robotStatus === '急停' ? 'bg-rose-500 text-rose-950' :
+                  robotStatusCode === 4 || robotStatus === '运行' ? 'bg-emerald-500 text-emerald-950' :
+                  robotStatusCode === 3 || robotStatus === '使能' ? 'bg-amber-500 text-amber-950' : 'bg-slate-700 text-slate-100'
                 ]">
-                  {{ robotStatus }}
+                  {{ translatedRobotStatus }}
                 </span>
               </div>
 
               <!-- 1.2 当前位姿 -->
               <div class="flex items-center justify-between">
-                <span class="text-slate-400 font-medium">{{ language === 'zh' ? '当前位姿：' : 'Current Pose:' }}</span>
+                <span class="text-slate-400 font-medium">{{ t.currentPoseLabel }}</span>
                 <span class="font-mono text-[#2ec6d6] font-semibold bg-slate-950/70 px-2.5 py-1 rounded-lg border border-slate-800/60 shadow-inner">
                   X={{ pose.x.toFixed(2) }}, Y={{ pose.y.toFixed(2) }}, Z={{ pose.z.toFixed(2) }}, U={{ pose.u.toFixed(2) }}
                 </span>
@@ -544,7 +587,7 @@ const innerCardBgClass = computed(() => {
 
               <!-- 1.3 速度比 (实时) -->
               <div class="flex items-center justify-between">
-                <span class="text-slate-400 font-medium">{{ language === 'zh' ? '速度比 (实时)：' : 'Speed Ratio (Real-time):' }}</span>
+                <span class="text-slate-400 font-medium">{{ t.speedRatioRealtime }}</span>
                 <span class="font-mono text-zinc-100 font-bold bg-slate-950/70 px-2.5 py-1 rounded-lg border border-slate-800/60 shadow-inner">
                   {{ speedRatio }} %
                 </span>
@@ -552,13 +595,13 @@ const innerCardBgClass = computed(() => {
 
               <!-- 1.4 程序状态 -->
               <div class="flex items-center justify-between">
-                <span class="text-slate-400 font-medium">{{ language === 'zh' ? '程序状态：' : 'Program Status:' }}</span>
+                <span class="text-slate-400 font-medium">{{ t.programStatusLabel }}</span>
                 <div class="flex items-center gap-1.5">
                   <span :class="[
                     'font-semibold text-xs',
                     programStatus === '运行中' ? 'text-emerald-400' : 'text-slate-400'
                   ]">
-                    {{ programStatus }}
+                    {{ translatedProgramStatus }}
                   </span>
                   <span v-if="programStatus === '运行中'" class="text-emerald-400 text-xs font-bold font-mono">▶</span>
                 </div>
@@ -566,9 +609,9 @@ const innerCardBgClass = computed(() => {
 
               <!-- 1.5 控制器当前状态 -->
               <div class="flex items-center justify-between">
-                <span class="text-slate-400 font-medium">{{ language === 'zh' ? '控制器当前状态：' : 'Controller State:' }}</span>
-                <span class="text-slate-200 bg-slate-950/40 px-2.5 py-1 rounded-lg border border-slate-800/50 font-medium max-w-[200px] truncate text-right text-[11px]" :title="controllerState">
-                  {{ controllerState }}
+                <span class="text-slate-400 font-medium">{{ t.controllerStateLabel }}</span>
+                <span class="text-slate-200 bg-slate-950/40 px-2.5 py-1 rounded-lg border border-slate-800/50 font-medium max-w-[200px] truncate text-right text-[11px]" :title="translatedControllerState">
+                  {{ translatedControllerState }}
                 </span>
               </div>
             </div>

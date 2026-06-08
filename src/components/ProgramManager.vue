@@ -15,12 +15,12 @@ const emit = defineEmits(["status-message", "refresh"]);
 
 const t = computed(() => translations[props.language]);
 
-const selectedTask = ref(1);
+const selectedTask = ref(255);
 
 const tasks = computed(() => [
-  { id: 1, name: t.value.taskDesc1 },
-  { id: 2, name: t.value.taskDesc2 },
-  { id: 3, name: t.value.taskDesc3 }
+  { id: 1, name: t.value.taskDesc2 },
+  { id: 2, name: t.value.taskDesc3 },
+  { id: 255, name: t.value.taskDesc1 },
 ]);
 
 const currentTaskName = computed(() => {

@@ -80,6 +80,7 @@ const startContinuousJog = (axis, dir) => {
   if (!props.connected || !isRobotEnabled.value) return;
   if (isJoggingActive) return;
   isJoggingActive = true;
+  // emit("jog", axis, dir, jogDist.value);
   emit("jog-start", axis, dir);
 };
 

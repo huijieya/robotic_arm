@@ -91,6 +91,14 @@ export default defineConfig(() => {
           target: 'http://192.168.131.154:8080',
           changeOrigin: true,
         },
+        '/jog_start': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
+        '/jog_stop': {
+          target: 'http://192.168.131.154:8080',
+          changeOrigin: true,
+        },
       }
     },
   };

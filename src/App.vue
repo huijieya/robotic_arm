@@ -154,7 +154,7 @@ const linkTelemetryStream = () => {
   }
 
   const wsUrl = getWsUrl();
-  console.log("Connecting to WebSocket:", wsUrl);
+  console.log("ws URL:", wsUrl);
   
   socket = new WebSocket(wsUrl);
   socket.binaryType = "blob";

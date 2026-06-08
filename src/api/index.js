@@ -147,7 +147,7 @@ export const Logs = {
         ScaraControl: scaraControlFiles,
         VisionSorter: visionSorterFiles
       },
-      { responseType: "blob" }
+      { responseType: "blob", timeout: 60000 }
     );
   }
 };

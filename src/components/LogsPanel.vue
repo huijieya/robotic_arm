@@ -63,12 +63,41 @@ const handleQueryLogs = async () => {
 
 const handleDownloadLogs = async () => {
   if (!props.connected || !queriedLogs.value) return;
-  
+
   if (selectedScaraFiles.value.length === 0 && selectedVisionFiles.value.length === 0) {
     alert(props.language === 'zh' ? "请至少选择一个日志文件" : "Please select at least one log file first.");
     return;
   }
-  
+  //---------
+  // 1. 计算选中文件的总大小
+  let totalSize = 0;
+  const allLogs = [
+    ...(queriedLogs.value.ScaraControl || []),
+    ...(queriedLogs.value.VisionSorter || [])
+  ];
+
+  selectedScaraFiles.value.forEach(name => {
+    const file = allLogs.find(f => f.name === name);
+    if (file) totalSize += file.size;
+  });
+  selectedVisionFiles.value.forEach(name => {
+    const file = allLogs.find(f => f.name === name);
+    if (file) totalSize += file.size;
+  });
+
+  // 2. 检查大小阈值 (例如 100MB = 100 * 1024 * 1024)
+  const MAX_DOWNLOAD_SIZE = 50 * 1024 * 1024;
+  if (totalSize > MAX_DOWNLOAD_SIZE) {
+    const sizeMB = (totalSize / 1024 / 1024).toFixed(2);
+    const confirmMsg = props.language === 'zh'
+      ? `选中文件总大小为 ${sizeMB} MB，可能导致下载超时。建议分批下载或联系管理员。是否继续？`
+      : `Total size is ${sizeMB} MB, which may cause timeout. Recommend downloading in batches. Continue?`;
+
+    if (!confirm(confirmMsg)) return;
+  }
+
+  //---------
+
   downloading.value = true;
   try {
     const res = await Logs.download(selectedScaraFiles.value, selectedVisionFiles.value);
@@ -83,7 +112,12 @@ const handleDownloadLogs = async () => {
       window.URL.revokeObjectURL(url);
     }
   } catch (e) {
-    alert(`Export failed: ${e}`);
+    // 优化错误提示
+    if (e.code === 'ECONNABORTED' || e.message.includes('timeout')) {
+       alert(props.language === 'zh' ? "下载超时：文件过大或网络较慢，请尝试减少选中文件数量。" : "Download timed out: Files too large or network slow. Try selecting fewer files.");
+    } else {
+       alert(`Export failed: ${e}`);
+    }
   } finally {
     downloading.value = false;
   }
@@ -98,9 +132,13 @@ const formatSize = (bytes) => {
   <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
     
     <!-- Title -->
-    <h4 class="text-base sm:text-lg font-bold text-slate-100 mb-3 select-none tracking-tight">
-      {{ t.logsTitle }}
-    </h4>
+    <div class="flex items-center justify-between mb-3 border-b pb-2 border-[#2ec6d6]/10">
+      <div class="flex items-center">
+        <span class="font-display font-medium text-xs uppercase tracking-wider text-slate-400 select-none">
+          {{ t.logsTitle }}
+        </span>
+      </div>
+    </div>
 
     <!-- Select Options types checkboxes -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 text-xs font-mono">
@@ -139,7 +177,7 @@ const formatSize = (bytes) => {
         id="query_logs_btn"
         @click="handleQueryLogs"
         :disabled="!props.connected || loading || types.length === 0"
-        :class="['flex-1 py-2 text-xs font-semibold rounded-lg shadow-sm cursor-pointer transition-all', props.connected && types.length > 0 ? 'bg-cyan-600 text-white hover:bg-cyan-500 active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed']"
+        :class="['flex-1 py-2 text-xs font-display font-semibold rounded-lg shadow-sm cursor-pointer transition-all', props.connected && types.length > 0 ? 'bg-[#2ec6d6] text-cyan-950 hover:bg-[#2ec6d6]/80 active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed']"
       >
         {{ loading ? "SEARCHING..." : t.queryLogs }}
       </button>
@@ -149,7 +187,7 @@ const formatSize = (bytes) => {
         id="download_logs_btn"
         @click="handleDownloadLogs"
         :disabled="downloading"
-        class="px-4 py-2 bg-slate-800 border border-slate-700 hover:border-cyan-500 hover:text-cyan-400 text-white rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+        class="px-4 py-2 bg-slate-800 border border-slate-700 hover:border-[#2ec6d6] text-white hover:text-[#2ec6d6] rounded-lg text-xs font-display font-semibold transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
       >
         <Download :size="13" />
         <span>{{ downloading ? "PACKING..." : t.downloadLogs }}</span>

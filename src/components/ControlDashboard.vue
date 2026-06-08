@@ -11,8 +11,7 @@ const props = defineProps({
   connected: { type: Boolean, default: false },
   ip: { type: String, default: "192.168.1.220" },
   initialized: { type: Boolean, default: false },
-  robotStatus: { type: String, default: "制动" },
-  robotStatusCode: { type: Number, default: 2 },
+  robotStatus: { type: String, default: "braking" },
   speedRatio: { type: Number, default: 40 },
   calib: { type: Object, default: () => ({ status: "idle", running: false, progress: 0, total: 9, message: "", errors: [], mean_error: 0.0, max_error: 0.0 }) }
 });
@@ -24,6 +23,10 @@ const emit = defineEmits([
 ]);
 
 const t = computed(() => translations[props.language]);
+
+const isRobotEnabled = computed(() => props.robotStatus === "enable");
+const isRobotRunning = computed(() => props.robotStatus === "running");
+const isRobotError = computed(() => props.robotStatus === "error");
 
 const inputIp = ref(props.ip || "192.168.1.220");
 const connecting = ref(false);
@@ -76,7 +79,7 @@ let jogInterval = null;
 let isJoggingActive = false;
 
 const startContinuousJog = (axis, dir) => {
-  if (!props.connected || props.robotStatusCode !== 3) return;
+  if (!props.connected || !isRobotEnabled.value) return;
   if (isJoggingActive) return;
   isJoggingActive = true;
 
@@ -165,12 +168,12 @@ onUnmounted(() => {
           <div class="text-xs text-slate-400 font-medium">
             {{ t.mechanicalArmStatus }}:
           </div>
-          <div :class="['p-3 rounded-lg border font-mono text-center flex items-center justify-center gap-2 min-h-[50px]', props.robotStatusCode === 3 || props.robotStatusCode === 4 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : props.robotStatusCode === 1 ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 animate-pulse' : 'bg-amber-500/10 border-amber-500/30 text-amber-500']">
-            <template v-if="props.robotStatusCode === 3 || props.robotStatusCode === 4">
+          <div :class="['p-3 rounded-lg border font-mono text-center flex items-center justify-center gap-2 min-h-[50px]', isRobotEnabled || isRobotRunning ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : isRobotError ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 animate-pulse' : 'bg-amber-500/10 border-amber-500/30 text-amber-500']">
+            <template v-if="isRobotEnabled || isRobotRunning">
               <CheckCircle :size="14" class="text-emerald-400" />
               <span class="text-xs font-bold">{{ t.enabled }}</span>
             </template>
-            <template v-else-if="props.robotStatusCode === 1">
+            <template v-else-if="isRobotError">
               <AlertTriangle :size="14" class="animate-bounce" />
               <span class="text-xs font-bold">{{ t.errorState }}</span>
             </template>
@@ -313,8 +316,8 @@ onUnmounted(() => {
         <button
           id="start_autocalib_btn"
           @click="emit('trigger-calibration')"
-          :disabled="!props.connected || props.robotStatusCode !== 3 || props.calib.running"
-          :class="['px-3 py-1.5 text-[11px] font-display font-semibold rounded-lg shadow-sm transition-all cursor-pointer', props.connected && props.robotStatusCode === 3 && !props.calib.running ? 'bg-[#2ec6d6] text-cyan-950 hover:bg-[#2ec6d6]/80 active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed']"
+          :disabled="!props.connected || !isRobotEnabled || props.calib.running"
+          :class="['px-3 py-1.5 text-[11px] font-display font-semibold rounded-lg shadow-sm transition-all cursor-pointer', props.connected && isRobotEnabled && !props.calib.running ? 'bg-[#2ec6d6] text-cyan-950 hover:bg-[#2ec6d6]/80 active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed']"
         >
           {{ props.calib.running ? t.calibRunningBtn : t.startCalibBtn }}
         </button>
@@ -415,7 +418,7 @@ onUnmounted(() => {
                 @touchstart.prevent="startContinuousJog('X', -1)"
                 @touchend="stopContinuousJog"
                 @touchcancel="stopContinuousJog"
-                :disabled="!props.connected || props.robotStatusCode !== 3"
+                :disabled="!props.connected || !isRobotEnabled"
                 class="w-10 h-8 flex items-center justify-center p-0 border border-slate-700 bg-slate-900 text-slate-300 hover:text-[#2ec6d6] hover:border-[#2ec6d6] disabled:border-slate-800 disabled:text-slate-600 rounded text-xs font-black transition-all select-none active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:active:scale-100"
               >
                 X-
@@ -428,7 +431,7 @@ onUnmounted(() => {
                 @touchstart.prevent="startContinuousJog('X', 1)"
                 @touchend="stopContinuousJog"
                 @touchcancel="stopContinuousJog"
-                :disabled="!props.connected || props.robotStatusCode !== 3"
+                :disabled="!props.connected || !isRobotEnabled"
                 class="w-10 h-8 flex items-center justify-center p-0 border border-slate-700 bg-slate-900 text-slate-300 hover:text-[#2ec6d6] hover:border-[#2ec6d6] disabled:border-slate-800 disabled:text-slate-600 rounded text-xs font-black transition-all select-none active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:active:scale-100"
               >
                 X+
@@ -448,7 +451,7 @@ onUnmounted(() => {
                 @touchstart.prevent="startContinuousJog('Y', -1)"
                 @touchend="stopContinuousJog"
                 @touchcancel="stopContinuousJog"
-                :disabled="!props.connected || props.robotStatusCode !== 3"
+                :disabled="!props.connected || !isRobotEnabled"
                 class="w-10 h-8 flex items-center justify-center p-0 border border-slate-700 bg-slate-900 text-slate-300 hover:text-[#2ec6d6] hover:border-[#2ec6d6] disabled:border-slate-800 disabled:text-slate-600 rounded text-xs font-black transition-all select-none active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:active:scale-100"
               >
                 Y-
@@ -461,7 +464,7 @@ onUnmounted(() => {
                 @touchstart.prevent="startContinuousJog('Y', 1)"
                 @touchend="stopContinuousJog"
                 @touchcancel="stopContinuousJog"
-                :disabled="!props.connected || props.robotStatusCode !== 3"
+                :disabled="!props.connected || !isRobotEnabled"
                 class="w-10 h-8 flex items-center justify-center p-0 border border-slate-700 bg-slate-900 text-slate-300 hover:text-[#2ec6d6] hover:border-[#2ec6d6] disabled:border-slate-800 disabled:text-slate-600 rounded text-xs font-black transition-all select-none active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:active:scale-100"
               >
                 Y+
@@ -481,7 +484,7 @@ onUnmounted(() => {
                 @touchstart.prevent="startContinuousJog('Z', -1)"
                 @touchend="stopContinuousJog"
                 @touchcancel="stopContinuousJog"
-                :disabled="!props.connected || props.robotStatusCode !== 3"
+                :disabled="!props.connected || !isRobotEnabled"
                 class="w-10 h-8 flex items-center justify-center p-0 border border-slate-700 bg-slate-900 text-slate-300 hover:text-[#2ec6d6] hover:border-[#2ec6d6] disabled:border-slate-800 disabled:text-slate-600 rounded text-xs font-black transition-all select-none active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:active:scale-100"
               >
                 Z-
@@ -494,7 +497,7 @@ onUnmounted(() => {
                 @touchstart.prevent="startContinuousJog('Z', 1)"
                 @touchend="stopContinuousJog"
                 @touchcancel="stopContinuousJog"
-                :disabled="!props.connected || props.robotStatusCode !== 3"
+                :disabled="!props.connected || !isRobotEnabled"
                 class="w-10 h-8 flex items-center justify-center p-0 border border-slate-700 bg-slate-900 text-slate-300 hover:text-[#2ec6d6] hover:border-[#2ec6d6] disabled:border-slate-800 disabled:text-slate-600 rounded text-xs font-black transition-all select-none active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:active:scale-100"
               >
                 Z+
@@ -514,7 +517,7 @@ onUnmounted(() => {
                 @touchstart.prevent="startContinuousJog('U', -1)"
                 @touchend="stopContinuousJog"
                 @touchcancel="stopContinuousJog"
-                :disabled="!props.connected || props.robotStatusCode !== 3"
+                :disabled="!props.connected || !isRobotEnabled"
                 class="w-10 h-8 flex items-center justify-center p-0 border border-slate-700 bg-slate-900 text-slate-300 hover:text-[#2ec6d6] hover:border-[#2ec6d6] disabled:border-slate-800 disabled:text-slate-600 rounded text-xs font-black transition-all select-none active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:active:scale-100"
               >
                 U-
@@ -527,7 +530,7 @@ onUnmounted(() => {
                 @touchstart.prevent="startContinuousJog('U', 1)"
                 @touchend="stopContinuousJog"
                 @touchcancel="stopContinuousJog"
-                :disabled="!props.connected || props.robotStatusCode !== 3"
+                :disabled="!props.connected || !isRobotEnabled"
                 class="w-10 h-8 flex items-center justify-center p-0 border border-slate-700 bg-slate-900 text-slate-300 hover:text-[#2ec6d6] hover:border-[#2ec6d6] disabled:border-slate-800 disabled:text-slate-600 rounded text-xs font-black transition-all select-none active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:active:scale-100"
               >
                 U+

@@ -110,6 +110,24 @@ export const Teach = {
 };
 
 /**
+ * 前台程序任务管理 (Frontend Program Task Management)
+ */
+export const Program = {
+  run(task) {
+    return Request.get(`/program/run?task=${task}`);
+  },
+  pause(task) {
+    return Request.get(`/program/pause?task=${task}`);
+  },
+  resume(task) {
+    return Request.get(`/program/resume?task=${task}`);
+  },
+  stop(task) {
+    return Request.get(`/program/stop?task=${task}`);
+  }
+};
+
+/**
  * 系统工业运行日志管理 (Factory Audit Trail & Diagnostic Logs)
  */
 export const Logs = {

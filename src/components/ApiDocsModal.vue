@@ -150,11 +150,155 @@ const ENDPOINTS = [
     desc: {
       zh: "示教并保存当前位姿为特定作用点 (pick表示抓取, place表示放置)",
       en: "Teach current mechanical coordinate to designated slot (pick/place-index)",
-      ja: "現在の姿勢をティーチング点として保存(pick/place指定)",
+      ja: "当前的姿勢をティーチング点として保存(pick/place指定)",
       ko: "현재 로봇암 공간 물리 좌표를 지점 파라메터로 티칭"
     },
     params: 'JSON Body: { "type": "pick" } OR { "type": "place", "index": 1 }',
     response: "OK"
+  },
+  {
+    method: "GET",
+    path: "/program/run?task=1",
+    desc: {
+      zh: "启动指定前台程序任务",
+      en: "Run designated foreground program task",
+      ja: "指定された前台プログラムタスクを起動",
+      ko: "지정된 전태 프로그램 태스크 기동 수행"
+    },
+    params: "task (int, required): 任务编号 (1, 2, 3)",
+    response: `{ "success": true, "code": 0, "data": null }`
+  },
+  {
+    method: "GET",
+    path: "/program/pause?task=1",
+    desc: {
+      zh: "暂停正在运行的前台任务",
+      en: "Pause actively running program task",
+      ja: "実行中の前台タスクを一時停止",
+      ko: "동작 중인 전태 프로그램 태스크 일시정지"
+    },
+    params: "task (int, required): 任务编号",
+    response: `{ "success": true, "code": 0, "data": null }`
+  },
+  {
+    method: "GET",
+    path: "/program/resume?task=1",
+    desc: {
+      zh: "恢复已暂停的前台任务",
+      en: "Resume previously paused program task",
+      ja: "一時停止された前台タスクを再開",
+      ko: "일시정지된 전태 프로그램 태스크 재개"
+    },
+    params: "task (int, required): 任务编号",
+    response: `{ "success": true, "code": 0, "data": null }`
+  },
+  {
+    method: "GET",
+    path: "/program/stop?task=1",
+    desc: {
+      zh: "停止当前前台任务",
+      en: "Stop actively running or paused program task",
+      ja: "実行中または一時停止中の前台タスクを停止",
+      ko: "실행 중 또는 일시정지된 전태 프로그램 태스크 완전 정지"
+    },
+    params: "task (int, required): 任务编号",
+    response: `{ "success": true, "code": 0, "data": null }`
+  },
+  {
+    method: "POST",
+    path: "/log/list",
+    desc: {
+      zh: "根据指定的类型获取服务器日志文件列表",
+      en: "Fetch list of log files matching specified types",
+      ja: "指定タイプに基づいてログファイル一覧を取得",
+      ko: "지정된 로그 범주에 필터링해 파일 리스트 조회"
+    },
+    params: 'JSON Body: { "types": ["ScaraControl", "VisionSorter"] }',
+    response: `{ "success": true, "code": 0, "data": { "ScaraControl": [...], "VisionSorter": [...] } }`
+  },
+  {
+    method: "POST",
+    path: "/log/download",
+    desc: {
+      zh: "打包下载选定的日志文件，返回 .tar 二进制归档",
+      en: "Archive selected log files into a download-ready .tar tarball",
+      ja: "選択したログを .tar ファイルとしてダウンロード",
+      ko: "선택된 파일들을 일괄 압축 적용하여 .tar 다운로드 수행"
+    },
+    params: 'JSON Body: { "ScaraControl": ["robot_web.log"], "VisionSorter": ["vision.log"] }',
+    response: "Binary Stream (application/x-tar)"
+  },
+  {
+    method: "GET",
+    path: "/vision/status",
+    desc: {
+      zh: "获取视觉检测与分拣模块当前是否在运行",
+      en: "Check if the optical inspection & sorting module is currently active",
+      ja: "ビジョン自動選別モジュールが稼働中か確認",
+      ko: "비전 분류 모듈 동작 수행 중 인지 여부 조회"
+    },
+    params: "None",
+    response: `{ "success": true, "code": 0, "data": { "running": 1 } }`
+  },
+  {
+    method: "POST",
+    path: "/vision/start",
+    desc: {
+      zh: "启动视觉检测分拣循环",
+      en: "Initiate optical inspection & sorting cycle",
+      ja: "ビジョン自動選択選別の巡回動作を開始",
+      ko: "비전 자동 분류 피킹 플레이스 사이클 시동"
+    },
+    params: "None",
+    response: `{ "success": true, "code": 0, "data": null }`
+  },
+  {
+    method: "POST",
+    path: "/vision/stop",
+    desc: {
+      zh: "关闭并停止视觉分拣循环",
+      en: "Deactivate optical inspection & sorting cycle",
+      ja: "ビジョン自動選択選別動作を無効化停止",
+      ko: "비전 자동 분류 피킹 플레이스 사이클 일시 정제"
+    },
+    params: "None",
+    response: `{ "success": true, "code": 0, "data": null }`
+  },
+  {
+    method: "POST",
+    path: "/teach_roi/start",
+    desc: {
+      zh: "进入 ROI 检测区域示教模式，锁定相机捕获",
+      en: "Enter ROI camera teach mode with lock",
+      ja: "ROI ティーチモードをロック開始",
+      ko: "ROI 검출 영역 교시 모드 활성화 진입"
+    },
+    params: "None",
+    response: '"ROI TEACH MODE ON"'
+  },
+  {
+    method: "GET",
+    path: "/get_roi",
+    desc: {
+      zh: "获取当前相机像素区域关注参数",
+      en: "Fetch active camera sub-region parameters",
+      ja: "現在のアクティブなROI関心座标情報を取得",
+      ko: "현재 정의된 관심 ROI 데이터 조회"
+    },
+    params: "None",
+    response: `{ "valid": true, "x": 100, "y": 120, "w": 300, "h": 240 }`
+  },
+  {
+    method: "GET",
+    path: "/get_points",
+    desc: {
+      zh: "检索抓取和放置示教点位设置状态",
+      en: "Retrieve teaching coverage map for pick and place positions",
+      ja: "ピッキング点とプレーシング点の設定状態をクエリ",
+      ko: "현재 포인트 교시 완료 유무 맵 조회"
+    },
+    params: "None",
+    response: `{ "pick": true, "place": [true, false, true] }`
   }
 ];
 

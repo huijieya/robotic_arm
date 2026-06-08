@@ -6,6 +6,7 @@ import CameraView from "./components/CameraView.vue";
 import ControlDashboard from "./components/ControlDashboard.vue";
 import VisionSheduler from "./components/VisionSheduler.vue";
 import LogsPanel from "./components/LogsPanel.vue";
+import ProgramManager from "./components/ProgramManager.vue";
 import { Settings, FileText, X } from "lucide-vue-next";
 import { Controller, Vision, updateApiBaseUrl } from "./api/index";
 
@@ -55,10 +56,8 @@ const getWsUrl = () => {
 };
 
 const initialized = ref(false);
-const robotStatus = ref("制动");
-const robotStatusCode = ref(2);
-const controllerState = ref("不允许程序操作和jog");
-const controllerStateCode = ref(3);
+const robotStatus = ref("braking");
+const controllerState = ref("not_allow_operation");
 const pose = ref({
   x: 528.61,
   y: -701.51,
@@ -66,7 +65,7 @@ const pose = ref({
   u: -1.68
 });
 const speedRatio = ref(40);
-const programStatus = ref("空闲");
+const programStatus = ref("idle");
 const visionRunning = ref(false);
 const teachRoiActive = ref(false);
 const roi = ref({
@@ -98,47 +97,37 @@ let reconnectTimeout = null;
 
 const t = computed(() => translations[language.value]);
 
+// High compatibility checkers for robot and program states
+const isError = computed(() => robotStatus.value === "error");
+const isRunning = computed(() => robotStatus.value === "running");
+const isEnabled = computed(() => robotStatus.value === "enable");
+const isBraking = computed(() => robotStatus.value === "braking");
+
+const isControllerAllowed = computed(() => controllerState.value === "allow_operation");
+
+const isProgramRunning = computed(() => programStatus.value === "run");
+const isProgramPaused = computed(() => programStatus.value === "pause");
+const isProgramError = computed(() => programStatus.value === "error");
+
 const translatedRobotStatus = computed(() => {
-  if (robotStatusCode.value === 1 || robotStatus.value === '错误' || robotStatus.value === '急停') {
-    return t.value.errorState;
-  }
-  if (robotStatusCode.value === 4 || robotStatus.value === '运行') {
-    return t.value.running;
-  }
-  if (robotStatusCode.value === 3 || robotStatus.value === '使能') {
-    return t.value.enabled;
-  }
-  if (robotStatus.value === '制动' || robotStatus.value === 'Braked' || robotStatus.value === 'Disabled') {
-    return t.value.disabled;
-  }
-  if (robotStatus.value === '使能' || robotStatus.value === 'Enabled') return t.value.enabled;
-  if (robotStatus.value === '运行' || robotStatus.value === 'Running') return t.value.running;
-  if (robotStatus.value === '错误' || robotStatus.value === 'Error' || robotStatus.value === '急停' || robotStatus.value === 'Estop') return t.value.errorState;
-  if (robotStatus.value === '制动' || robotStatus.value === 'Braked' || robotStatus.value === 'Disabled') return t.value.disabled;
-  return robotStatus.value;
+  if (isError.value) return t.value.errorState;
+  if (isRunning.value) return t.value.running;
+  if (isEnabled.value) return t.value.enabled;
+  return t.value.disabled;
 });
 
 const translatedProgramStatus = computed(() => {
-  if (programStatus.value === '运行中' || programStatus.value === 'Running') {
-    return t.value.running;
-  }
-  if (programStatus.value === '空闲' || programStatus.value === 'Idle') {
-    return t.value.idle;
-  }
-  return programStatus.value;
+  if (isProgramRunning.value) return t.value.taskRunning;
+  if (isProgramPaused.value) return t.value.taskPaused;
+  if (isProgramError.value) return t.value.taskError;
+  return t.value.taskIdle;
 });
 
 const translatedControllerState = computed(() => {
-  if (controllerStateCode.value === 2 || controllerState.value === "允许程序操作和jog" || controllerState.value === "PROG_ALLOW_JOG (reg881 = 2)") {
+  if (isControllerAllowed.value) {
     return t.value.ctrlStateProgJog;
   }
-  if (controllerStateCode.value === 1 || controllerState.value === "允许程序操作") {
-    return t.value.ctrlStateProg;
-  }
-  if (controllerStateCode.value === 3 || controllerState.value === "不允许程序操作和jog" || controllerState.value === "WAIT_INITIAL_HANDSHAKE") {
-    return t.value.ctrlStateNone;
-  }
-  return controllerState.value;
+  return t.value.ctrlStateNone;
 });
 
 // Initialize and maintain WebSocket subscriptions
@@ -184,10 +173,8 @@ const linkTelemetryStream = () => {
         if (payload.type === "sys_status" && payload.data) {
           const d = payload.data;
           robotStatus.value = d.robot_status;
-          robotStatusCode.value = d.robot_status_code;
           controllerState.value = d.controller_state;
-          controllerStateCode.value = d.controller_state_code;
-          initialized.value = d.controller_state_code === 2 || d.controller_state === "允许程序操作和jog";
+          initialized.value = d.controller_state === "allow_operation";
           pose.value = d.pose;
           speedRatio.value = d.speed_ratio;
           programStatus.value = d.program_status;
@@ -212,7 +199,7 @@ const linkTelemetryStream = () => {
 
   socket.onclose = () => {
     console.warn("Robotic Arm stream lost. Retrying hook in 3000ms...");
-    reconnectTimeout = setTimeout(linkTelemetryStream, 300000);
+    reconnectTimeout = setTimeout(linkTelemetryStream, 3000);
   };
 
   socket.onerror = (err) => {
@@ -284,8 +271,7 @@ const handleInitialize = async () => {
     const res = await Controller.init();
     if (res.data && res.data.success) {
       initialized.value = true;
-      controllerState.value = "允许程序操作和jog";
-      controllerStateCode.value = 2;
+      controllerState.value = "allow_operation";
       return true;
     }
   } catch (e) {
@@ -298,8 +284,7 @@ const handleEnable = async () => {
   try {
     const res = await Controller.start();
     if (res.data && res.data.success) {
-      robotStatus.value = "使能";
-      robotStatusCode.value = 3;
+      robotStatus.value = "enable";
       return true;
     }
   } catch (e) {
@@ -312,8 +297,7 @@ const handleDisable = async () => {
   try {
     const res = await Controller.stop();
     if (res.data && res.data.success) {
-      robotStatus.value = "制动";
-      robotStatusCode.value = 2;
+      robotStatus.value = "braking";
       visionRunning.value = false;
       return true;
     }
@@ -327,8 +311,7 @@ const handleClearError = async () => {
   try {
     const res = await Controller.clearError();
     if (res.data && res.data.success) {
-      robotStatus.value = "使能";
-      robotStatusCode.value = 3;
+      robotStatus.value = "enable";
       return true;
     }
   } catch (e) {
@@ -340,8 +323,7 @@ const handleClearError = async () => {
 const handleTriggerSimError = async () => {
   try {
     await Controller.simTriggerError();
-    robotStatus.value = "错误";
-    robotStatusCode.value = 1;
+    robotStatus.value = "error";
   } catch (e) {
     console.error(e);
   }
@@ -396,8 +378,7 @@ const handleStartSorting = async () => {
     const res = await Vision.start();
     if (res.data && res.data.success) {
       visionRunning.value = true;
-      robotStatus.value = "运行";
-      robotStatusCode.value = 4;
+      robotStatus.value = "running";
       return true;
     }
   } catch (e) {
@@ -411,8 +392,7 @@ const handleStopSorting = async () => {
     const res = await Vision.stop();
     if (res.data && res.data.success) {
       visionRunning.value = false;
-      robotStatus.value = "使能";
-      robotStatusCode.value = 3;
+      robotStatus.value = "enable";
       return true;
     }
   } catch (e) {
@@ -569,9 +549,9 @@ const innerCardBgClass = computed(() => {
                 <span class="text-slate-400 font-medium">{{ t.robotStateLabel }}</span>
                 <span :class="[
                   'px-2.5 py-1 rounded text-xs font-black min-w-[70px] text-center shadow-xs',
-                  robotStatusCode === 1 || robotStatus === '错误' || robotStatus === '急停' ? 'bg-rose-500 text-rose-950' :
-                  robotStatusCode === 4 || robotStatus === '运行' ? 'bg-emerald-500 text-emerald-950' :
-                  robotStatusCode === 3 || robotStatus === '使能' ? 'bg-amber-500 text-amber-950' : 'bg-slate-700 text-slate-100'
+                  isError ? 'bg-rose-500 text-rose-950' :
+                  isRunning ? 'bg-emerald-500 text-emerald-950' :
+                  isEnabled ? 'bg-amber-500 text-amber-950' : 'bg-slate-700 text-slate-100'
                 ]">
                   {{ translatedRobotStatus }}
                 </span>
@@ -599,11 +579,11 @@ const innerCardBgClass = computed(() => {
                 <div class="flex items-center gap-1.5">
                   <span :class="[
                     'font-semibold text-xs',
-                    programStatus === '运行中' ? 'text-emerald-400' : 'text-slate-400'
+                    isProgramRunning ? 'text-emerald-400' : 'text-slate-400'
                   ]">
                     {{ translatedProgramStatus }}
                   </span>
-                  <span v-if="programStatus === '运行中'" class="text-emerald-400 text-xs font-bold font-mono">▶</span>
+                  <span v-if="isProgramRunning" class="text-emerald-400 text-xs font-bold font-mono">▶</span>
                 </div>
               </div>
 
@@ -627,6 +607,14 @@ const innerCardBgClass = computed(() => {
             :wsBinaryBlob="wsBinaryBlob"
           />
 
+          <ProgramManager
+            :language="language"
+            :connected="connected"
+            :robotStatus="robotStatus"
+            :programStatus="programStatus"
+            @refresh="linkTelemetryStream"
+          />
+
          </div>
 
         <!-- RIGHT COLUMN: CONFIGURATION CONTROLLERS -->
@@ -642,7 +630,6 @@ const innerCardBgClass = computed(() => {
               :initialized="initialized"
               @initialize="handleInitialize"
               :robotStatus="robotStatus"
-              :robotStatusCode="robotStatusCode"
               @enable="handleEnable"
               @disable="handleDisable"
               @clear-error="handleClearError"

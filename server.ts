@@ -8,6 +8,27 @@ import { createServer as createViteServer } from "vite";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Helper functions to map state fields to exact non-Chinese string fields for updated WebSocket spec
+function getRobotStatusString(status: string, code?: number): string {
+  if (code === 1 || status === "错误" || status === "急停" || status === "error") return "error";
+  if (code === 4 || status === "运行" || status === "running") return "running";
+  if (code === 3 || status === "使能" || status === "enable") return "enable";
+  return "braking";
+}
+
+function getControllerStateString(state: string, code?: number): string {
+  if (code === 2 || state === "允许程序操作和jog" || state === "allow_operation") return "allow_operation";
+  if (code === 1 || state === "允许程序操作") return "allow_operation";
+  return "not_allow_operation";
+}
+
+function getProgramStatusString(status: string): string {
+  if (status === "运行中" || status === "run") return "run";
+  if (status === "暂停" || status === "pause") return "pause";
+  if (status === "错误" || status === "error") return "error";
+  return "idle";
+}
+
 // Helper base64 JPEGs representing camera states
 // These are minimal, valid 320x240 JPEGs of differing solid colors with minimal details to prevent high bandwidth issues
 // We can use them to simulate camera frames!
@@ -154,13 +175,11 @@ async function startServer() {
     ws.send(JSON.stringify({
       type: "sys_status",
       data: {
-        robot_status: robot.robot_status,
-        robot_status_code: robot.robot_status_code,
-        controller_state: robot.controller_state,
-        controller_state_code: robot.controller_state_code,
+        robot_status: getRobotStatusString(robot.robot_status, robot.robot_status_code),
+        controller_state: getControllerStateString(robot.controller_state, robot.controller_state_code),
         pose: robot.pose,
         speed_ratio: robot.speed_ratio,
-        program_status: robot.program_status
+        program_status: getProgramStatusString(robot.program_status)
       }
     }));
 
@@ -174,13 +193,11 @@ async function startServer() {
     const statusPayload = JSON.stringify({
       type: "sys_status",
       data: {
-        robot_status: robot.robot_status,
-        robot_status_code: robot.robot_status_code,
-        controller_state: robot.controller_state,
-        controller_state_code: robot.controller_state_code,
+        robot_status: getRobotStatusString(robot.robot_status, robot.robot_status_code),
+        controller_state: getControllerStateString(robot.controller_state, robot.controller_state_code),
         pose: robot.pose,
         speed_ratio: robot.speed_ratio,
-        program_status: robot.program_status
+        program_status: getProgramStatusString(robot.program_status)
       }
     });
 
@@ -600,6 +617,54 @@ async function startServer() {
     // Send standard mock TAR data
     const mockTarContent = "MOCK TAR STREAM CONTENT FOR CORRESPONDING LOG PACKAGES";
     res.send(Buffer.from(mockTarContent));
+  });
+
+  // 6.1 Run Program Task
+  app.get("/program/run", (req, res) => {
+    const task = parseInt(req.query.task as string);
+    if (isNaN(task)) {
+      return res.json({ success: false, code: -1, data: "任务编号无效" });
+    }
+    robot.program_status = "运行中";
+    robot.robot_status = "运行";
+    robot.robot_status_code = 4;
+    res.json({ success: true, code: 0, data: null });
+  });
+
+  // 6.2 Pause Program Task
+  app.get("/program/pause", (req, res) => {
+    const task = parseInt(req.query.task as string);
+    if (isNaN(task)) {
+      return res.json({ success: false, code: -1, data: "任务编号无效" });
+    }
+    robot.program_status = "暂停";
+    robot.robot_status = "使能";
+    robot.robot_status_code = 3;
+    res.json({ success: true, code: 0, data: null });
+  });
+
+  // 6.3 Resume Program Task
+  app.get("/program/resume", (req, res) => {
+    const task = parseInt(req.query.task as string);
+    if (isNaN(task)) {
+      return res.json({ success: false, code: -1, data: "任务编号无效" });
+    }
+    robot.program_status = "运行中";
+    robot.robot_status = "运行";
+    robot.robot_status_code = 4;
+    res.json({ success: true, code: 0, data: null });
+  });
+
+  // 6.4 Stop Program Task
+  app.get("/program/stop", (req, res) => {
+    const task = parseInt(req.query.task as string);
+    if (isNaN(task)) {
+      return res.json({ success: false, code: -1, data: "任务编号无效" });
+    }
+    robot.program_status = "空闲";
+    robot.robot_status = "使能";
+    robot.robot_status_code = 3;
+    res.json({ success: true, code: 0, data: null });
   });
 
   // Trigger error simulation for industrial UI realism

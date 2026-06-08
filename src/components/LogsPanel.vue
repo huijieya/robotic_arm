@@ -17,6 +17,25 @@ const queriedLogs = ref(null);
 const loading = ref(false);
 const downloading = ref(false);
 
+const selectedScaraFiles = ref([]);
+const selectedVisionFiles = ref([]);
+
+const toggleScaraFile = (name) => {
+  if (selectedScaraFiles.value.includes(name)) {
+    selectedScaraFiles.value = selectedScaraFiles.value.filter(n => n !== name);
+  } else {
+    selectedScaraFiles.value.push(name);
+  }
+};
+
+const toggleVisionFile = (name) => {
+  if (selectedVisionFiles.value.includes(name)) {
+    selectedVisionFiles.value = selectedVisionFiles.value.filter(n => n !== name);
+  } else {
+    selectedVisionFiles.value.push(name);
+  }
+};
+
 const handleCheckboxChange = (type) => {
   if (types.value.includes(type)) {
     types.value = types.value.filter((t) => t !== type);
@@ -32,6 +51,8 @@ const handleQueryLogs = async () => {
     const res = await Logs.list(types.value);
     if (res.data && res.data.success && res.data.data) {
       queriedLogs.value = res.data.data;
+      selectedScaraFiles.value = (res.data.data.ScaraControl || []).map((file) => file.name);
+      selectedVisionFiles.value = (res.data.data.VisionSorter || []).map((file) => file.name);
     }
   } catch (e) {
     // ignore
@@ -42,18 +63,20 @@ const handleQueryLogs = async () => {
 
 const handleDownloadLogs = async () => {
   if (!props.connected || !queriedLogs.value) return;
-  downloading.value = true;
   
-  const scaraNames = (queriedLogs.value.ScaraControl || []).map((file) => file.name);
-  const visionNames = (queriedLogs.value.VisionSorter || []).map((file) => file.name);
-
+  if (selectedScaraFiles.value.length === 0 && selectedVisionFiles.value.length === 0) {
+    alert(props.language === 'zh' ? "请至少选择一个日志文件" : "Please select at least one log file first.");
+    return;
+  }
+  
+  downloading.value = true;
   try {
-    const res = await Logs.download(scaraNames, visionNames);
+    const res = await Logs.download(selectedScaraFiles.value, selectedVisionFiles.value);
     if (res.data) {
       const url = window.URL.createObjectURL(res.data);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `scara_industrial_logs_2026_06_05.tar`;
+      a.download = `scara_logs_${new Date().toISOString().slice(0, 10)}.tar`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -142,23 +165,30 @@ const formatSize = (bytes) => {
       
       <!-- ScaraControl logs -->
       <div v-if="types.includes('ScaraControl') && queriedLogs.ScaraControl" id="scara_logs_group" class="space-y-1.5">
-        <span class="text-[10px] uppercase font-bold text-[#2ec6d6] block">
-          📦 Directory: ScaraControl Logs (/workspace/logs)
+        <span class="text-[10px] uppercase font-bold text-[#2ec6d6] block leading-relaxed">
+          📦 Directory: ScaraControl Logs (/home/ubuntu/桌面/workspace/workspace/scara_control/logs)
         </span>
         <template v-if="queriedLogs.ScaraControl.length > 0">
           <div 
             v-for="file in queriedLogs.ScaraControl"
             :id="`scara_log_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`"
             :key="file.name"
-            class="p-2.5 rounded border border-slate-800 flex items-center justify-between text-[11px] bg-slate-955 bg-slate-950 text-slate-300"
+            class="p-2.5 rounded border border-slate-800 flex items-center justify-between text-[11px] bg-slate-950 text-slate-300"
           >
-            <div class="flex items-center gap-2">
-              <FileText :size="14" class="text-[#2ec6d6]" />
-              <span class="font-semibold text-slate-200">{{ file.name }}</span>
+            <div class="flex items-center gap-2.5">
+              <input
+                type="checkbox"
+                :id="`scara_log_chk_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`"
+                :checked="selectedScaraFiles.includes(file.name)"
+                @change="toggleScaraFile(file.name)"
+                class="accent-[#2ec6d6] h-3.5 w-3.5 rounded cursor-pointer shrink-0"
+              />
+              <FileText :size="14" class="text-[#2ec6d6] shrink-0" />
+              <span class="font-semibold text-slate-200 break-all">{{ file.name }}</span>
             </div>
-            <div class="flex items-center gap-3 text-slate-500">
+            <div class="flex items-center gap-3 text-slate-500 shrink-0 text-right">
               <span>{{ formatSize(file.size) }}</span>
-              <span>{{ file.lastModifiedAt }}</span>
+              <span class="hidden sm:inline">{{ file.lastModifiedAt }}</span>
             </div>
           </div>
         </template>
@@ -167,8 +197,8 @@ const formatSize = (bytes) => {
 
       <!-- VisionSorter logs -->
       <div v-if="types.includes('VisionSorter') && queriedLogs.VisionSorter" id="vision_logs_group" class="space-y-1.5 mt-2">
-        <span class="text-[10px] uppercase font-bold text-amber-500 block">
-          📦 Directory: VisionSorter Logs (/scara_control/build/log)
+        <span class="text-[10px] uppercase font-bold text-amber-500 block leading-relaxed">
+          📦 Directory: VisionSorter Logs (/home/ubuntu/桌面/workspace/workspace/scara_control/build/log)
         </span>
         <template v-if="queriedLogs.VisionSorter.length > 0">
           <div 
@@ -177,13 +207,20 @@ const formatSize = (bytes) => {
             :key="file.name"
             class="p-2.5 rounded border border-slate-800 flex items-center justify-between text-[11px] bg-slate-950 text-slate-300"
           >
-            <div class="flex items-center gap-2">
-              <FileText :size="14" class="text-amber-500" />
-              <span class="font-semibold text-slate-200">{{ file.name }}</span>
+            <div class="flex items-center gap-2.5">
+              <input
+                type="checkbox"
+                :id="`vision_log_chk_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`"
+                :checked="selectedVisionFiles.includes(file.name)"
+                @change="toggleVisionFile(file.name)"
+                class="accent-amber-500 h-3.5 w-3.5 rounded cursor-pointer shrink-0"
+              />
+              <FileText :size="14" class="text-amber-500 shrink-0" />
+              <span class="font-semibold text-slate-200 break-all">{{ file.name }}</span>
             </div>
-            <div class="flex items-center gap-3 text-slate-500">
+            <div class="flex items-center gap-3 text-slate-500 shrink-0 text-right">
               <span>{{ formatSize(file.size) }}</span>
-              <span>{{ file.lastModifiedAt }}</span>
+              <span class="hidden sm:inline">{{ file.lastModifiedAt }}</span>
             </div>
           </div>
         </template>

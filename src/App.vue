@@ -67,6 +67,7 @@ const pose = ref({
 });
 const speedRatio = ref(0);
 const programStatus = ref("unknown");
+const receivedSysStatus = ref(false);
 const visionRunning = ref(false);
 const teachRoiActive = ref(false);
 const roi = ref({
@@ -112,6 +113,7 @@ const isProgramError = computed(() => programStatus.value === "error");
 
 const translatedRobotStatus = computed(() => {
   if (!connected.value) return t.value.disconnected;
+  if (!receivedSysStatus.value) return language.value === 'zh' ? '获取中...' : 'Fetching...';
   if (isError.value) return t.value.errorState;
   if (isRunning.value) return t.value.running;
   if (isEnabled.value) return t.value.enabled;
@@ -120,6 +122,7 @@ const translatedRobotStatus = computed(() => {
 
 const translatedProgramStatus = computed(() => {
   if (!connected.value) return t.value.disconnected;
+  if (!receivedSysStatus.value) return language.value === 'zh' ? '获取中...' : 'Fetching...';
   if (isProgramRunning.value) return t.value.taskRunning;
   if (isProgramPaused.value) return t.value.taskPaused;
   if (isProgramError.value) return t.value.taskError;
@@ -128,6 +131,7 @@ const translatedProgramStatus = computed(() => {
 
 const translatedControllerState = computed(() => {
   if (!connected.value) return t.value.disconnected;
+  if (!receivedSysStatus.value) return language.value === 'zh' ? '获取中...' : 'Fetching...';
   if (isControllerAllowed.value) {
     return t.value.ctrlStateProgJog;
   }
@@ -137,6 +141,7 @@ const translatedControllerState = computed(() => {
 // Initialize and maintain WebSocket subscriptions
 const linkTelemetryStream = () => {
   wsConnected.value = false;
+  receivedSysStatus.value = false;
   if (socket) {
     try {
       socket.close();
@@ -183,6 +188,7 @@ const linkTelemetryStream = () => {
           pose.value = d.pose;
           speedRatio.value = d.speed_ratio;
           programStatus.value = d.program_status;
+          receivedSysStatus.value = true;
         } else if (payload.type === "calib_status" && payload.data) {
           const d = payload.data;
           calib.value = {
@@ -205,12 +211,14 @@ const linkTelemetryStream = () => {
   socket.onclose = () => {
     console.warn("Robotic Arm stream lost. Retrying hook in 3000ms...");
     wsConnected.value = false;
+    receivedSysStatus.value = false;
     reconnectTimeout = setTimeout(linkTelemetryStream, 3000);
   };
 
   socket.onerror = (err) => {
     console.error("Industrial line socket exception:", err);
     wsConnected.value = false;
+    receivedSysStatus.value = false;
   };
 };
 
@@ -270,14 +278,12 @@ const handleConnect = async (targetIp) => {
 
 const handleDisconnect = () => {
   connected.value = false;
-  showGatewayModal.value = true;
 };
 
 const handleInitialize = async () => {
   try {
     const res = await Controller.init();
     if (res.data && res.data.success) {
-      controllerState.value = "allow_operation";
       return true;
     }
   } catch (e) {
@@ -290,7 +296,6 @@ const handleEnable = async () => {
   try {
     const res = await Controller.start();
     if (res.data && res.data.success) {
-      robotStatus.value = "enable";
       return true;
     }
   } catch (e) {
@@ -303,8 +308,6 @@ const handleDisable = async () => {
   try {
     const res = await Controller.stop();
     if (res.data && res.data.success) {
-      robotStatus.value = "braking";
-      visionRunning.value = false;
       return true;
     }
   } catch (e) {
@@ -317,7 +320,6 @@ const handleClearError = async () => {
   try {
     const res = await Controller.clearError();
     if (res.data && res.data.success) {
-      robotStatus.value = "enable";
       return true;
     }
   } catch (e) {
@@ -329,7 +331,6 @@ const handleClearError = async () => {
 const handleTriggerSimError = async () => {
   try {
     await Controller.simTriggerError();
-    robotStatus.value = "error";
   } catch (e) {
     console.error(e);
   }
@@ -591,7 +592,7 @@ const innerCardBgClass = computed(() => {
               <div class="flex items-center justify-between">
                 <span class="text-slate-400 font-normal text-sm md:text-[15px]">{{ t.currentPoseLabel }}</span>
                 <span class="font-mono text-[#2ec6d6] font-semibold text-sm md:text-[15px] tracking-tight selection:bg-cyan-500/10">
-                  <template v-if="connected">
+                  <template v-if="connected && receivedSysStatus">
                     X={{ pose.x.toFixed(2) }}, Y={{ pose.y.toFixed(2) }}, Z={{ pose.z.toFixed(2) }}, U={{ pose.u.toFixed(2) }}
                   </template>
                   <template v-else>
@@ -604,7 +605,7 @@ const innerCardBgClass = computed(() => {
               <div class="flex items-center justify-between">
                 <span class="text-slate-400 font-normal text-sm md:text-[15px]">{{ t.speedRatioRealtime }}</span>
                 <span class="font-mono text-slate-100 font-medium text-sm md:text-[15px]">
-                  {{ connected ? `${speedRatio} %` : '---' }}
+                  {{ connected && receivedSysStatus ? `${speedRatio} %` : '---' }}
                 </span>
               </div>
 

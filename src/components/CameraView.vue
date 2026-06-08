@@ -70,13 +70,9 @@ const handleSaveRoi = () => {
     @mouseleave="isHovered = false"
   >
     <!-- Title -->
-    <div class="flex items-center justify-between mb-3 border-b pb-2 border-cyan-500/10">
-      <div class="flex items-center">
-        <span class="font-display font-medium text-xs uppercase tracking-wider text-slate-400 select-none">
-          {{ t.cameraFeed }}
-        </span>
-      </div>
-    </div>
+    <h4 class="text-base sm:text-lg font-bold text-slate-100 mb-3 select-none tracking-tight">
+      {{ t.cameraFeed }}
+    </h4>
 
     <!-- Screen Frame -->
     <div class="relative w-full aspect-video rounded-lg overflow-hidden bg-slate-950 border border-slate-800/80">
@@ -162,7 +158,7 @@ const handleSaveRoi = () => {
           v-if="props.teachRoiActive"
           id="save_roi_mode_btn"
           @click="handleSaveRoi"
-          class="px-3.5 py-1.5 text-xs font-display font-medium rounded-lg bg-[#2ec6d6] hover:bg-[#2ec6d6]/80 text-cyan-950 transition-all cursor-pointer shadow-md"
+          class="px-3.5 py-1.5 text-xs font-medium rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white transition-all cursor-pointer shadow-md"
         >
           {{ t.exitRoiBtn }}
         </button>
@@ -171,7 +167,7 @@ const handleSaveRoi = () => {
           v-else
           id="enter_roi_mode_btn"
           :disabled="!props.connected"
-          :class="['px-3.5 py-1.5 text-xs font-display font-medium border rounded-lg transition-all cursor-pointer', props.connected ? 'border-[#2ec6d6] text-[#2ec6d6] hover:bg-[#2ec6d6]/10 active:scale-95' : 'border-slate-800 text-slate-500 cursor-not-allowed']"
+          :class="['px-3.5 py-1.5 text-xs font-medium border rounded-lg transition-all cursor-pointer', props.connected ? 'border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10 active:scale-95' : 'border-slate-800 text-slate-500 cursor-not-allowed']"
         >
           <div class="flex items-center gap-1.5">
             <Focus :size="13" />
@@ -182,7 +178,7 @@ const handleSaveRoi = () => {
 
       <!-- ROI adjusting sliders -->
       <div v-if="props.teachRoiActive" class="p-3 bg-cyan-950/20 border border-cyan-500/20 rounded-lg space-y-2.5 font-mono text-[11px]">
-        <p class="text-[#2ec6d6] text-xs font-semibold flex items-center gap-1.5">
+        <p class="text-cyan-400 text-xs font-semibold flex items-center gap-1.5">
           <Focus :size="14" class="animate-pulse" />
           <span>{{ t.roiDesc }}</span>
         </p>

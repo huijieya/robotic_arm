@@ -89,21 +89,21 @@ const handleTeachPlace = async (index) => {
     
     <!-- 1. Start and Stop Vision Sorting -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
-      <h4 class="font-display font-medium text-xs uppercase tracking-wider mb-3 text-slate-400 select-none">
+      <h4 class="text-base sm:text-lg font-bold text-slate-100 mb-3 select-none tracking-tight">
         <span>{{ t.visionModule }}</span>
       </h4>
 
-      <div class="p-3.5 rounded-lg bg-cyan-950/20 border border-cyan-500/10 mb-4 flex items-center justify-between">
+      <div class="p-3.5 rounded-lg bg-cyan-955/15 border border-cyan-500/10 mb-4 flex items-center justify-between">
         <div class="space-y-0.5">
           <span class="text-[10px] text-slate-400 block font-mono">
             {{ t.sortingState }}:
           </span>
-          <span :class="['text-xs font-mono font-bold', props.visionRunning ? 'text-[#2ec6d6]' : 'text-slate-400']">
+          <span :class="['text-xs font-mono font-bold', props.visionRunning ? 'text-cyan-400' : 'text-slate-400']">
             {{ props.visionRunning ? t.running : t.idle }}
           </span>
         </div>
         <div class="flex items-center gap-1.5">
-          <span :class="['w-2.5 h-2.5 rounded-full', props.visionRunning ? 'bg-[#2ec6d6] animate-ping' : 'bg-slate-700']" />
+          <span :class="['w-2.5 h-2.5 rounded-full', props.visionRunning ? 'bg-cyan-500 animate-ping' : 'bg-slate-700']" />
           <span class="text-[9px] font-mono font-bold text-slate-500">SORT_ENGINE</span>
         </div>
       </div>
@@ -113,7 +113,7 @@ const handleTeachPlace = async (index) => {
           id="start_sorting_engine_btn"
           @click="emit('start-vision')"
           :disabled="!props.connected || props.visionRunning"
-          :class="['py-2 text-xs font-display font-semibold rounded-lg shadow-sm cursor-pointer transition-all', props.connected && !props.visionRunning ? 'bg-[#2ec6d6] text-cyan-950 hover:bg-[#2ec6d6]/80 active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed']"
+          :class="['py-2 text-xs font-semibold rounded-lg shadow-sm cursor-pointer transition-all', props.connected && !props.visionRunning ? 'bg-cyan-600 text-white hover:bg-cyan-500 active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed']"
         >
           <div class="flex items-center justify-center gap-1.5">
             <Play :size="12" fill="currentColor" />
@@ -125,7 +125,7 @@ const handleTeachPlace = async (index) => {
           id="stop_sorting_engine_btn"
           @click="emit('stop-vision')"
           :disabled="!props.connected || !props.visionRunning"
-          :class="['py-2 text-xs font-display font-semibold rounded-lg shadow-sm cursor-pointer transition-all', props.connected && props.visionRunning ? 'bg-rose-600 hover:bg-rose-700 text-white active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed']"
+          :class="['py-2 text-xs font-semibold rounded-lg shadow-sm cursor-pointer transition-all', props.connected && props.visionRunning ? 'bg-rose-600 hover:bg-rose-700 text-white active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed']"
         >
           <div class="flex items-center justify-center gap-1.5">
             <Square :size="12" fill="currentColor" />
@@ -137,8 +137,8 @@ const handleTeachPlace = async (index) => {
 
     <!-- 2. Place Points Teach Control -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
-      <div class="flex items-center justify-between mb-3.5 pb-2 border-b border-[#2ec6d6]/10">
-        <h4 class="font-display font-medium text-xs uppercase tracking-wider text-slate-400 select-none">
+      <div class="flex items-center justify-between mb-3.5 pb-1">
+        <h4 class="text-base sm:text-lg font-bold text-slate-100 select-none tracking-tight">
           <span>{{ t.pointsTitle }}</span>
         </h4>
       </div>

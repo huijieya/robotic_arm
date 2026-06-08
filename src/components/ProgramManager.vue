@@ -162,22 +162,19 @@ const statusText = computed(() => {
 <template>
   <div class="p-5 rounded-2xl border bg-slate-900/60 border-slate-800/80 shadow-xl relative transition-all duration-200 hover:border-cyan-500/10 box-glow space-y-4">
     <!-- Header -->
-    <div class="flex items-center justify-between border-b border-slate-800/60 pb-3">
-      <div class="flex items-center gap-2">
-        <Cpu :size="16" class="text-cyan-400 animate-pulse" />
-        <h3 class="font-display font-semibold text-xs uppercase tracking-wider text-slate-200 select-none">
-          {{ t.programManagerTitle }}
-        </h3>
-      </div>
+    <div class="flex items-center justify-between pb-1 select-none">
+      <h3 class="text-base sm:text-lg font-bold text-slate-100 tracking-tight">
+        {{ t.programManagerTitle }}
+      </h3>
       <!-- Telemetry Status Pill -->
-      <span :class="['px-2 py-0.5 rounded text-[10px] font-mono border font-bold', statusColorClass]">
+      <span :class="['px-2.5 py-0.5 rounded-full text-[10px] font-semibold border', statusColorClass]">
         {{ statusText }}
       </span>
     </div>
 
     <!-- Active Program Task Selector -->
     <div class="space-y-2">
-      <label class="text-[10px] uppercase font-bold text-slate-500 tracking-wider font-mono block">
+      <label class="text-[10px] uppercase font-bold text-slate-500 tracking-wider font-mono block select-none">
         {{ t.selectTaskLabel }}
       </label>
       <div class="grid grid-cols-1 gap-2">
@@ -190,14 +187,14 @@ const statusText = computed(() => {
           :class="[
             'p-3 text-left rounded-xl border text-xs font-medium cursor-pointer transition-all flex items-start gap-2.5',
             selectedTask === task.id
-              ? 'bg-cyan-500/15 border-cyan-400/40 text-cyan-200 shadow-sm'
+              ? 'bg-cyan-955/20 border-cyan-500/25 text-slate-100 shadow-sm'
               : 'bg-slate-950/40 border-slate-800/50 text-slate-400 hover:text-white hover:border-slate-700',
             (props.robotStatus === 'running' || props.programStatus === 'run' || props.programStatus === 'pause')
               ? 'opacity-65 cursor-not-allowed hover:text-slate-400 hover:border-slate-850'
               : ''
           ]"
         >
-          <span :class="['h-4 w-4 rounded-full border flex items-center justify-center mt-0.5 font-bold font-mono text-[9px] shrink-0', selectedTask === task.id ? 'border-cyan-400 text-cyan-400 bg-cyan-400/10' : 'border-slate-700 text-slate-500']">
+          <span :class="['h-4 w-4 rounded-full border flex items-center justify-center mt-0.5 font-bold font-mono text-[9px] shrink-0', selectedTask === task.id ? 'border-cyan-500/40 text-cyan-400 bg-cyan-500/10' : 'border-slate-700 text-slate-500']">
             {{ task.id }}
           </span>
           <div class="space-y-0.5 leading-tight">

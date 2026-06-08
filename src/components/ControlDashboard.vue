@@ -116,7 +116,7 @@ onUnmounted(() => {
     
     <!-- 1. Device Connections Bento Item -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
-      <h4 class="font-display font-medium text-xs uppercase tracking-wider mb-3 text-slate-400 select-none">
+      <h4 class="text-base sm:text-lg font-bold text-slate-100 mb-3 select-none tracking-tight">
         <span>{{ t.step1Connect }}</span>
       </h4>
 
@@ -128,14 +128,14 @@ onUnmounted(() => {
             v-model="inputIp"
             placeholder="192.168.1.220"
             :disabled="props.connected"
-            class="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-800 transition-all outline-none bg-slate-950 text-cyan-300 focus:border-cyan-500"
+            class="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-800 transition-all outline-none bg-slate-950 text-slate-200 focus:border-cyan-500"
           />
         </div>
         <button
           id="connect_ip_btn"
           @click="handleConnectClick"
           :disabled="props.connected || connecting"
-          :class="['px-5 py-2 text-xs font-display font-semibold rounded-lg shadow-sm transition-all cursor-pointer', props.connected ? 'bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 cursor-default' : 'bg-[#2ec6d6] text-cyan-950 hover:bg-[#2ec6d6]/80 active:scale-95']"
+          :class="['px-5 py-2 text-xs font-display font-semibold rounded-lg shadow-sm transition-all cursor-pointer', props.connected ? 'bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 cursor-default font-bold' : 'bg-cyan-600 hover:bg-cyan-500 text-white active:scale-95']"
         >
           {{ connecting ? t.connecting : props.connected ? t.connected : t.connectBtn }}
         </button>
@@ -144,7 +144,7 @@ onUnmounted(() => {
 
     <!-- 2. Arm Status & Activation Bento Item -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
-      <h4 class="font-display font-medium text-xs uppercase tracking-wider mb-4 text-slate-400 select-none">
+      <h4 class="text-base sm:text-lg font-bold text-slate-100 mb-4 select-none tracking-tight">
         <span>{{ t.step23InitEnable }}</span>
       </h4>
 
@@ -152,21 +152,21 @@ onUnmounted(() => {
         
         <!-- Quick Stats Pillar -->
         <div class="space-y-2.5">
-          <div class="text-xs text-slate-400 font-medium">
-            {{ t.controllerState }}:
+          <div class="text-xs text-slate-400 font-medium select-none">
+            {{ t.controllerState }}
           </div>
           <div class="p-3 rounded-lg border border-slate-800 font-mono text-center flex flex-col justify-center min-h-[70px] bg-slate-950">
-            <span :class="['text-[11px] font-bold', props.initialized ? 'text-[#2ec6d6]' : 'text-amber-500 animate-pulse']">
+            <span :class="['text-[11.5px] font-bold', props.initialized ? 'text-slate-100' : 'text-amber-500 animate-pulse']">
               {{ props.initialized ? t.initSuccess : t.notSet }}
             </span>
             <span class="text-[9px] text-slate-500 mt-1">
-              {{ props.initialized ? "PROG_ALLOW_JOG (reg881 = 2)" : "WAIT_INITIAL_HANDSHAKE" }}
+              {{ props.initialized ? "allow_operation" : "not_allow_operation" }}
             </span>
           </div>
 
           <!-- Arm status pill -->
-          <div class="text-xs text-slate-400 font-medium">
-            {{ t.mechanicalArmStatus }}:
+          <div class="text-xs text-slate-400 font-medium select-none">
+            {{ t.mechanicalArmStatus }}
           </div>
           <div :class="['p-3 rounded-lg border font-mono text-center flex items-center justify-center gap-2 min-h-[50px]', isRobotEnabled || isRobotRunning ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : isRobotError ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 animate-pulse' : 'bg-amber-500/10 border-amber-500/30 text-amber-500']">
             <template v-if="isRobotEnabled || isRobotRunning">
@@ -246,13 +246,13 @@ onUnmounted(() => {
     <!-- 3. Global Speed Overrides Slider -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
       <div class="flex items-center justify-between mb-2">
-        <h4 class="font-display font-medium text-xs uppercase tracking-wider text-slate-400 select-none">
+        <h4 class="text-base sm:text-lg font-bold text-slate-100 select-none tracking-tight">
           <span>{{ t.speedRatio }}</span>
         </h4>
         <div class="flex items-center gap-2 text-[10px] font-mono select-none">
           <span class="text-slate-400">{{ t.currentValLabel }} <span class="text-white font-bold">{{ props.speedRatio }}%</span></span>
           <span class="text-slate-600">|</span>
-          <span class="text-slate-400">{{ t.adjustValLabel }} <span class="text-[#2ec6d6] font-extrabold">{{ localSpeedRatio }}%</span></span>
+          <span class="text-slate-400">{{ t.adjustValLabel }} <span class="text-cyan-400 font-bold">{{ localSpeedRatio }}%</span></span>
         </div>
       </div>
 
@@ -265,28 +265,28 @@ onUnmounted(() => {
           :value="localSpeedRatio"
           :disabled="!props.connected || showApplyConfirm"
           @input="handleSpeedSliderChange"
-          class="flex-1 accent-[#2ec6d6] bg-slate-800 rounded-lg appearance-none h-2 cursor-pointer disabled:cursor-not-allowed"
+          class="flex-1 accent-cyan-500 bg-slate-800 rounded-lg appearance-none h-2 cursor-pointer disabled:cursor-not-allowed"
         />
         <button
           id="apply_speed_ratio_btn"
           @click="handleSpeedRelease"
           :disabled="!props.connected || localSpeedRatio === props.speedRatio || showApplyConfirm"
-          class="px-3 py-1.5 text-xs font-display font-bold rounded-lg bg-[#2ec6d6] text-cyan-950 hover:bg-[#2ec6d6]/85 disabled:bg-slate-850 disabled:text-slate-600 border border-transparent disabled:border-transparent active:scale-95 transition-all cursor-pointer flex-shrink-0"
+          class="px-3 py-1.5 text-xs font-display font-medium rounded-lg bg-cyan-600 text-white hover:bg-cyan-500 disabled:bg-slate-850 disabled:text-slate-600 border border-transparent disabled:border-transparent active:scale-95 transition-all cursor-pointer flex-shrink-0"
         >
           {{ props.language === 'zh' ? '应用' : props.language === 'ja' ? '適用' : props.language === 'ko' ? '적용' : 'Apply' }}
         </button>
       </div>
 
       <!-- Second level confirmation prompt -->
-      <div v-if="showApplyConfirm" class="mt-3 p-2.5 bg-cyan-950/25 border border-cyan-500/20 rounded-lg flex items-center justify-between text-xs font-mono animate-fadeIn">
-        <span class="text-[#2ec6d6]">
+      <div v-if="showApplyConfirm" class="mt-3 p-2.5 bg-cyan-950/20 border border-cyan-500/10 rounded-lg flex items-center justify-between text-xs font-mono animate-fadeIn">
+        <span class="text-cyan-300">
           {{ t.confirmApplySpeed.replace('{speed}', localSpeedRatio) }}
         </span>
         <div class="flex items-center gap-2">
           <button
             id="confirm_speed_btn"
             @click="confirmSpeedChange"
-            class="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded text-[10px] cursor-pointer"
+            class="px-2.5 py-1 bg-emerald-550 hover:bg-emerald-500 text-white font-extrabold rounded text-[10px] cursor-pointer"
           >
             {{ t.confirmBtn }}
           </button>
@@ -309,15 +309,15 @@ onUnmounted(() => {
 
     <!-- 4. Auto Calibration Panel -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
-      <div class="flex items-center justify-between mb-3 pb-2 border-b border-[#2ec6d6]/10">
-        <h4 class="font-display font-medium text-xs uppercase tracking-wider text-slate-400 select-none">
+      <div class="flex items-center justify-between mb-3">
+        <h4 class="text-base sm:text-lg font-bold text-slate-100 select-none tracking-tight">
           <span>{{ t.autoCalib }}</span>
         </h4>
         <button
           id="start_autocalib_btn"
           @click="emit('trigger-calibration')"
           :disabled="!props.connected || !isRobotEnabled || props.calib.running"
-          :class="['px-3 py-1.5 text-[11px] font-display font-semibold rounded-lg shadow-sm transition-all cursor-pointer', props.connected && isRobotEnabled && !props.calib.running ? 'bg-[#2ec6d6] text-cyan-950 hover:bg-[#2ec6d6]/80 active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed']"
+          :class="['px-3 py-1.5 text-[11px] font-semibold rounded-lg shadow-sm transition-all cursor-pointer', props.connected && isRobotEnabled && !props.calib.running ? 'bg-cyan-600 text-white hover:bg-cyan-500 active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed']"
         >
           {{ props.calib.running ? t.calibRunningBtn : t.startCalibBtn }}
         </button>
@@ -368,7 +368,7 @@ onUnmounted(() => {
 
     <!-- 5. Jog Interactive Step controls (Manual Teleoperation) -->
     <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
-      <h4 class="font-display font-medium text-xs uppercase tracking-wider mb-3.5 text-slate-400 select-none">
+      <h4 class="text-base sm:text-lg font-bold text-slate-100 mb-3.5 select-none tracking-tight">
         <span>{{ t.manualOption }}</span>
       </h4>
 
@@ -382,7 +382,7 @@ onUnmounted(() => {
             id="jog_dist_input"
             type="number"
             v-model.number="jogDist"
-            class="w-16 px-2 py-1 rounded border border-slate-800 bg-slate-950 text-cyan-300 text-xs font-bold text-center outline-none focus:border-[#2ec6d6]"
+            class="w-16 px-2 py-1 rounded border border-slate-800 bg-slate-950 text-slate-100 text-xs font-bold text-center outline-none focus:border-cyan-500/50"
           />
         </div>
         <!-- Rapid click presets -->
@@ -395,7 +395,7 @@ onUnmounted(() => {
             :id="`quick_preset_${num}`"
             :key="num"
             @click="jogDist = num"
-            :class="['px-2 py-0.5 text-[9px] rounded font-bold border transition-all cursor-pointer', jogDist === num ? 'bg-[#2ec6d6] text-cyan-950 border-[#2ec6d6]' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white']"
+            :class="['px-2 py-0.5 text-[9px] rounded font-bold border transition-all cursor-pointer', jogDist === num ? 'bg-cyan-600 text-white border-cyan-500' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white']"
           >
             {{ num }}
           </button>

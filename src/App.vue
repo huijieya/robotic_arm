@@ -535,23 +535,21 @@ const innerCardBgClass = computed(() => {
 
           <!-- 1. System Status Info Overview (系统状态总览) -->
           <div :class="['p-5 rounded-2xl border space-y-4 shadow-xl relative transition-all duration-200 hover:border-cyan-500/10', innerCardBgClass, 'box-glow']">
-            <div class="flex items-center justify-between border-b border-slate-800/60 pb-3">
-              <div class="flex items-center">
-                <h3 class="font-display font-medium text-xs uppercase tracking-wider text-slate-400 select-none">
-                  {{ t.systemStatusOverview }}
-                </h3>
-              </div>
+            <div class="flex items-center justify-between pb-1 select-none">
+              <h3 class="text-[17px] font-bold text-slate-100 tracking-tight">
+                {{ t.systemStatusOverview }}
+              </h3>
             </div>
 
-            <div class="space-y-3.5 text-xs font-sans">
+            <div class="space-y-4 text-sm font-sans pt-1">
               <!-- 1.1 机械臂状态 -->
               <div class="flex items-center justify-between">
-                <span class="text-slate-400 font-medium">{{ t.robotStateLabel }}</span>
+                <span class="text-slate-400 font-normal text-sm md:text-[15px]">{{ t.robotStateLabel }}</span>
                 <span :class="[
-                  'px-2.5 py-1 rounded text-xs font-black min-w-[70px] text-center shadow-xs',
-                  isError ? 'bg-rose-500 text-rose-950' :
-                  isRunning ? 'bg-emerald-500 text-emerald-950' :
-                  isEnabled ? 'bg-amber-500 text-amber-950' : 'bg-slate-700 text-slate-100'
+                  'px-3.5 py-1 rounded-full text-xs font-semibold shadow-xs border text-center transition-all min-w-[70px]',
+                  isError ? 'bg-rose-950/40 text-rose-400 border-rose-500/20 shadow-rose-950/10' :
+                  isRunning ? 'bg-emerald-950/45 text-emerald-400 border-emerald-500/20' :
+                  isEnabled ? 'bg-emerald-900/40 text-emerald-400 border-emerald-500/20' : 'bg-slate-800/40 text-slate-300 border-slate-700/20'
                 ]">
                   {{ translatedRobotStatus }}
                 </span>
@@ -559,38 +557,38 @@ const innerCardBgClass = computed(() => {
 
               <!-- 1.2 当前位姿 -->
               <div class="flex items-center justify-between">
-                <span class="text-slate-400 font-medium">{{ t.currentPoseLabel }}</span>
-                <span class="font-mono text-[#2ec6d6] font-semibold bg-slate-950/70 px-2.5 py-1 rounded-lg border border-slate-800/60 shadow-inner">
+                <span class="text-slate-400 font-normal text-sm md:text-[15px]">{{ t.currentPoseLabel }}</span>
+                <span class="font-mono text-[#2ec6d6] font-semibold text-sm md:text-[15px] tracking-tight selection:bg-cyan-500/10">
                   X={{ pose.x.toFixed(2) }}, Y={{ pose.y.toFixed(2) }}, Z={{ pose.z.toFixed(2) }}, U={{ pose.u.toFixed(2) }}
                 </span>
               </div>
 
               <!-- 1.3 速度比 (实时) -->
               <div class="flex items-center justify-between">
-                <span class="text-slate-400 font-medium">{{ t.speedRatioRealtime }}</span>
-                <span class="font-mono text-zinc-100 font-bold bg-slate-950/70 px-2.5 py-1 rounded-lg border border-slate-800/60 shadow-inner">
+                <span class="text-slate-400 font-normal text-sm md:text-[15px]">{{ t.speedRatioRealtime }}</span>
+                <span class="font-mono text-slate-100 font-medium text-sm md:text-[15px]">
                   {{ speedRatio }} %
                 </span>
               </div>
 
               <!-- 1.4 程序状态 -->
               <div class="flex items-center justify-between">
-                <span class="text-slate-400 font-medium">{{ t.programStatusLabel }}</span>
-                <div class="flex items-center gap-1.5">
-                  <span :class="[
-                    'font-semibold text-xs',
-                    isProgramRunning ? 'text-emerald-400' : 'text-slate-400'
+                <span class="text-slate-400 font-normal text-sm md:text-[15px]">{{ t.programStatusLabel }}</span>
+                <div class="flex items-center gap-1.5 justify-end">
+                  <span :class=" [
+                    'font-medium text-sm md:text-[15px]',
+                    isProgramRunning ? 'text-emerald-400' : 'text-slate-100'
                   ]">
                     {{ translatedProgramStatus }}
                   </span>
-                  <span v-if="isProgramRunning" class="text-emerald-400 text-xs font-bold font-mono">▶</span>
+                  <span v-if="isProgramRunning" class="text-emerald-400 text-xs font-bold font-mono animate-pulse">▶</span>
                 </div>
               </div>
 
               <!-- 1.5 控制器当前状态 -->
               <div class="flex items-center justify-between">
-                <span class="text-slate-400 font-medium">{{ t.controllerStateLabel }}</span>
-                <span class="text-slate-200 bg-slate-950/40 px-2.5 py-1 rounded-lg border border-slate-800/50 font-medium max-w-[200px] truncate text-right text-[11px]" :title="translatedControllerState">
+                <span class="text-slate-400 font-normal text-sm md:text-[15px]">{{ t.controllerStateLabel }}</span>
+                <span class="text-slate-100 font-medium text-sm md:text-[15px] max-w-[240px] truncate text-right font-sans" :title="translatedControllerState">
                   {{ translatedControllerState }}
                 </span>
               </div>

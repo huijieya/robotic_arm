@@ -98,13 +98,9 @@ const formatSize = (bytes) => {
   <div class="p-4 rounded-xl border border-slate-800 transition-all bg-slate-900/80">
     
     <!-- Title -->
-    <div class="flex items-center justify-between mb-3 border-b pb-2 border-[#2ec6d6]/10">
-      <div class="flex items-center">
-        <span class="font-display font-medium text-xs uppercase tracking-wider text-slate-400 select-none">
-          {{ t.logsTitle }}
-        </span>
-      </div>
-    </div>
+    <h4 class="text-base sm:text-lg font-bold text-slate-100 mb-3 select-none tracking-tight">
+      {{ t.logsTitle }}
+    </h4>
 
     <!-- Select Options types checkboxes -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 text-xs font-mono">
@@ -143,7 +139,7 @@ const formatSize = (bytes) => {
         id="query_logs_btn"
         @click="handleQueryLogs"
         :disabled="!props.connected || loading || types.length === 0"
-        :class="['flex-1 py-2 text-xs font-display font-semibold rounded-lg shadow-sm cursor-pointer transition-all', props.connected && types.length > 0 ? 'bg-[#2ec6d6] text-cyan-950 hover:bg-[#2ec6d6]/80 active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed']"
+        :class="['flex-1 py-2 text-xs font-semibold rounded-lg shadow-sm cursor-pointer transition-all', props.connected && types.length > 0 ? 'bg-cyan-600 text-white hover:bg-cyan-500 active:scale-95' : 'bg-slate-800 text-slate-600 cursor-not-allowed']"
       >
         {{ loading ? "SEARCHING..." : t.queryLogs }}
       </button>
@@ -153,7 +149,7 @@ const formatSize = (bytes) => {
         id="download_logs_btn"
         @click="handleDownloadLogs"
         :disabled="downloading"
-        class="px-4 py-2 bg-slate-800 border border-slate-700 hover:border-[#2ec6d6] text-white hover:text-[#2ec6d6] rounded-lg text-xs font-display font-semibold transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+        class="px-4 py-2 bg-slate-800 border border-slate-700 hover:border-cyan-500 hover:text-cyan-400 text-white rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
       >
         <Download :size="13" />
         <span>{{ downloading ? "PACKING..." : t.downloadLogs }}</span>

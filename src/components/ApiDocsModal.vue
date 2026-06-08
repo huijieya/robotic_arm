@@ -122,6 +122,30 @@ const ENDPOINTS = [
   },
   {
     method: "GET",
+    path: "/jog_start?axis=X&dir=1",
+    desc: {
+      zh: "开始连续移动（SCARA 连续 Jog 接口：按住动、松手停）",
+      en: "Start continuous Jog movement along target axis",
+      ja: "指定軸方向へ連続ジョグ動作を起動する (長押し制御用)",
+      ko: "지정 축 방향으로 연속 조그 동작 시작"
+    },
+    params: "axis (string): X/Y/Z/U; dir (int): 1 (正向) / -1 (负向)",
+    response: `{ "success": true, "code": 0, "data": null }`
+  },
+  {
+    method: "GET",
+    path: "/jog_stop",
+    desc: {
+      zh: "停止连续移动",
+      en: "Stop current continuous Jog movement",
+      ja: "連続ジョグ動作を停止する",
+      ko: "현재 연속 조그 동작 정지"
+    },
+    params: "None",
+    response: `{ "success": true, "code": 0, "data": null }`
+  },
+  {
+    method: "GET",
     path: "/autocalib",
     desc: {
       zh: "触发全自动手眼标定(示教点移动 → 采集 → 模型结算)，接口同步阻塞",

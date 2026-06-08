@@ -64,6 +64,12 @@ export const Controller = {
   jogStep(axis, dir, dist) {
     return Request.get(`/jog_step?axis=${axis}&dir=${dir}&dist=${dist}`);
   },
+  jogStart(axis, dir) {
+    return Request.get(`/jog_start?axis=${axis}&dir=${dir}`);
+  },
+  jogStop() {
+    return Request.get("/jog_stop");
+  },
   triggerAutoCalib() {
     return Request.get("/autocalib");
   }

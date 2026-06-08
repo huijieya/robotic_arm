@@ -19,7 +19,7 @@ const props = defineProps({
 const emit = defineEmits([
   "connect", "initialize", "enable", "disable", 
   "clear-error", "trigger-sim-error", "speed-ratio-change", 
-  "jog", "trigger-calibration"
+  "jog", "jog-start", "jog-stop", "trigger-calibration"
 ]);
 
 const t = computed(() => translations[props.language]);
@@ -73,37 +73,20 @@ const handleConnectClick = async () => {
   }, 1000);
 };
 
-// Continuous jog handling (supports click & long press)
-let jogTimeout = null;
-let jogInterval = null;
+// Continuous jog handling (supports mousedown/touchstart -> start, mouseup/touchend -> stop)
 let isJoggingActive = false;
 
 const startContinuousJog = (axis, dir) => {
   if (!props.connected || !isRobotEnabled.value) return;
   if (isJoggingActive) return;
   isJoggingActive = true;
-
-  // 1. Immediately trigger once
-  emit("jog", axis, dir, jogDist.value);
-
-  // 2. Set timeout for continuous movement if held down
-  jogTimeout = setTimeout(() => {
-    jogInterval = setInterval(() => {
-      emit("jog", axis, dir, jogDist.value);
-    }, 250);
-  }, 500);
+  emit("jog-start", axis, dir);
 };
 
 const stopContinuousJog = () => {
+  if (!isJoggingActive) return;
   isJoggingActive = false;
-  if (jogTimeout) {
-    clearTimeout(jogTimeout);
-    jogTimeout = null;
-  }
-  if (jogInterval) {
-    clearInterval(jogInterval);
-    jogInterval = null;
-  }
+  emit("jog-stop");
 };
 
 onUnmounted(() => {
@@ -542,7 +525,7 @@ onUnmounted(() => {
       </div>
 
       <div class="text-[10px] text-slate-500 font-sans italic text-center select-none pt-2.5 leading-normal">
-        {{ props.language === 'zh' ? '※ 手动遥控：点击进行短距离移动；按住不放可连续高速移动。' : '※ Teleoperation advice: Tap button for single step; hold down for high-frequency continuous motion.' }}
+        {{ props.language === 'zh' ? '※ 手动遥控：按住按钮连续移动，松开/移开按钮停止移动。' : '※ Teleoperation: Press and hold to move continuously, release to stop.' }}
       </div>
     </div>
 

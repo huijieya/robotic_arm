@@ -363,6 +363,32 @@ const handleJog = async (axis, dir, dist) => {
   return false;
 };
 
+const handleJogStart = async (axis, dir) => {
+  try {
+    const res = await Controller.jogStart(axis, dir);
+    if (res.data && res.data.success) {
+      return true;
+    } else {
+      console.warn("Continuous jog start failed:", res.data?.data);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  return false;
+};
+
+const handleJogStop = async () => {
+  try {
+    const res = await Controller.jogStop();
+    if (res.data && res.data.success) {
+      return true;
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  return false;
+};
+
 const handleTriggerCalibration = async () => {
   try {
     const res = await Controller.triggerAutoCalib();
@@ -635,6 +661,8 @@ const innerCardBgClass = computed(() => {
               :speedRatio="speedRatio"
               @speed-ratio-change="handleSpeedRatioChange"
               @jog="handleJog"
+              @jog-start="handleJogStart"
+              @jog-stop="handleJogStop"
               :calib="calib"
               @trigger-calibration="handleTriggerCalibration"
             />
